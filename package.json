@@ -1,0 +1,419 @@
+{
+  "name": "openboard",
+  "displayName": "%openboard.displayName%",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "openboard-dev",
+  "description": "%openboard.description%",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openboard-dev/openboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/openboard-dev/openboard/issues"
+  },
+  "homepage": "https://github.com/openboard-dev/openboard#readme",
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "whiteboard",
+    "diagram",
+    "canvas",
+    "language model tools"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "icon": "media/icon.png",
+  "l10n": "./l10n",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCustomEditor:openboard.board",
+    "onCommand:openboard.newBoard",
+    "onCommand:openboard.exportBoard",
+    "onCommand:openboard.zoomToFit",
+    "onCommand:openboard.toggleGrid",
+    "onCommand:openboard.toggleMinimap",
+    "onCommand:openboard.openAsText",
+    "onCommand:openboard.copyMcpConfig",
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "%openboard.untrusted.description%"
+    },
+    "virtualWorkspaces": {
+      "supported": "limited",
+      "description": "%openboard.virtual.description%"
+    }
+  },
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "openboard.board",
+        "displayName": "%openboard.customEditor.displayName%",
+        "selector": [
+          {
+            "filenamePattern": "*.openboard"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "languages": [
+      {
+        "id": "openboard",
+        "aliases": [
+          "OpenBoard"
+        ],
+        "extensions": [
+          ".openboard"
+        ],
+        "icon": {
+          "light": "./media/openboard-icon.svg",
+          "dark": "./media/openboard-icon.svg"
+        }
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "*.openboard",
+        "url": "./src/core/schema/board.schema.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "openboard.newBoard",
+        "title": "%openboard.command.newBoard.title%"
+      },
+      {
+        "command": "openboard.exportBoard",
+        "title": "%openboard.command.exportBoard.title%"
+      },
+      {
+        "command": "openboard.zoomToFit",
+        "title": "%openboard.command.zoomToFit.title%"
+      },
+      {
+        "command": "openboard.toggleGrid",
+        "title": "%openboard.command.toggleGrid.title%"
+      },
+      {
+        "command": "openboard.toggleMinimap",
+        "title": "%openboard.command.toggleMinimap.title%"
+      },
+      {
+        "command": "openboard.openAsText",
+        "title": "%openboard.command.openAsText.title%"
+      },
+      {
+        "command": "openboard.copyMcpConfig",
+        "title": "%openboard.command.copyMcpConfig.title%"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "openboard.newBoard"
+        },
+        {
+          "command": "openboard.exportBoard",
+          "when": "activeCustomEditorId == 'openboard.board'"
+        },
+        {
+          "command": "openboard.zoomToFit",
+          "when": "activeCustomEditorId == 'openboard.board'"
+        },
+        {
+          "command": "openboard.toggleGrid",
+          "when": "activeCustomEditorId == 'openboard.board'"
+        },
+        {
+          "command": "openboard.toggleMinimap",
+          "when": "activeCustomEditorId == 'openboard.board'"
+        },
+        {
+          "command": "openboard.openAsText",
+          "when": "activeCustomEditorId == 'openboard.board'"
+        },
+        {
+          "command": "openboard.copyMcpConfig"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "openboard.newBoard",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@50"
+        },
+        {
+          "command": "openboard.exportBoard",
+          "when": "resourceExtname == .openboard",
+          "group": "navigation@50"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "openboard.openAsText",
+          "when": "activeCustomEditorId == 'openboard.board'",
+          "group": "navigation@90"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "%openboard.config.title%",
+      "properties": {
+        "openboard.defaultExportScale": {
+          "type": "number",
+          "enum": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "default": 2,
+          "description": "%openboard.config.defaultExportScale%"
+        },
+        "openboard.defaultExportBackground": {
+          "type": "string",
+          "enum": [
+            "transparent",
+            "white",
+            "theme"
+          ],
+          "default": "theme",
+          "description": "%openboard.config.defaultExportBackground%"
+        },
+        "openboard.gridSpacing": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 200,
+          "default": 20,
+          "description": "%openboard.config.gridSpacing%"
+        },
+        "openboard.defaultFontFamily": {
+          "type": "string",
+          "maxLength": 100,
+          "default": "",
+          "description": "%openboard.config.defaultFontFamily%"
+        },
+        "openboard.autoLayoutDirection": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ],
+          "default": "horizontal",
+          "description": "%openboard.config.autoLayoutDirection%"
+        },
+        "openboard.mcp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%openboard.config.mcp.enabled%"
+        }
+      }
+    },
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "openboard.mcp",
+        "label": "OpenBoard"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "openboard_workspaces",
+        "displayName": "OpenBoard: Workspaces",
+        "modelDescription": "Describe this OpenBoard window (workspaceId, workspaceName, folders, ide) and its open boards.",
+        "toolReferenceName": "openboard_workspaces",
+        "canBeReferencedInPrompt": true,
+        "tags": [
+          "openboard",
+          "whiteboard"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "openboard_read_skill",
+        "displayName": "OpenBoard: Read Skill",
+        "modelDescription": "Read OpenBoard usage docs. Without `topic` returns the topic index; read it first.",
+        "toolReferenceName": "openboard_read_skill",
+        "canBeReferencedInPrompt": true,
+        "tags": [
+          "openboard",
+          "whiteboard"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "description": "Topic id from the index, e.g. code-mode."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "openboard_execute",
+        "displayName": "OpenBoard: Execute Script",
+        "modelDescription": "Run JavaScript (async function body; `return` JSON) in a sandbox with a global `ob` API to read and edit boards. All edits of one run are a single undo step and roll back if the code throws. Read topic `code-mode` first.",
+        "toolReferenceName": "openboard_execute",
+        "canBeReferencedInPrompt": true,
+        "tags": [
+          "openboard",
+          "code"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Function body, e.g. const [a] = await ob.board().create({type:\"rectangle\"}); return a;"
+            },
+            "board": {
+              "type": "string",
+              "description": "Board file path for ob.board(); default: active board."
+            },
+            "timeoutMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000,
+              "description": "Default 10000."
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "openboard_call",
+        "displayName": "OpenBoard: Call Action",
+        "modelDescription": "Run one OpenBoard action. Actions: element.create, element.update, element.query, element.delete, element.arrange, connect, layout, import, export, board.preview, board.list, board.open, board.create, board.save, board.close, schema, board.summary, selection, viewport, undo, redo, library.save, library.list, library.insert, batch. Read topic `actions` for each input schema.",
+        "toolReferenceName": "openboard_call",
+        "canBeReferencedInPrompt": true,
+        "tags": [
+          "openboard",
+          "whiteboard"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "element.create",
+                "element.update",
+                "element.query",
+                "element.delete",
+                "element.arrange",
+                "connect",
+                "layout",
+                "import",
+                "export",
+                "board.preview",
+                "board.list",
+                "board.open",
+                "board.create",
+                "board.save",
+                "board.close",
+                "schema",
+                "board.summary",
+                "selection",
+                "viewport",
+                "undo",
+                "redo",
+                "library.save",
+                "library.list",
+                "library.insert",
+                "batch"
+              ]
+            },
+            "input": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "openboard_save",
+        "displayName": "OpenBoard: Save Board",
+        "modelDescription": "Save a board to disk (default: the active board). Returns the saved path.",
+        "toolReferenceName": "openboard_save",
+        "canBeReferencedInPrompt": true,
+        "tags": [
+          "openboard",
+          "whiteboard"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "board": {
+              "type": "string",
+              "description": "Board file path; default: active board."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "gen:manifest": "node scripts/run-ts.mjs scripts/gen-manifest.ts",
+    "check:manifest": "node scripts/run-ts.mjs scripts/gen-manifest.ts --check",
+    "build": "node esbuild.config.mjs",
+    "gen:mcp-tools": "node scripts/run-ts.mjs scripts/gen-mcp-tools.ts",
+    "watch": "node esbuild.config.mjs --watch",
+    "build:schemas": "node scripts/build-schemas.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --reporter=verbose",
+    "gen:icon": "node scripts/gen-icon.mjs",
+    "package": "npm run build:schemas && node esbuild.config.mjs --minify && npm run gen:manifest -- --check && vsce package",
+    "test:perf": "vitest run --config vitest.perf.config.mts",
+    "build:integration": "node scripts/build-integration.mjs",
+    "test:integration": "node esbuild.config.mjs && node scripts/build-integration.mjs && node out-int/runTest.js"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/vscode": "1.90.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.1.1",
+    "ajv": "8.17.1",
+    "axe-core": "4.14.1",
+    "esbuild": "0.28.2",
+    "eslint": "10.15.0",
+    "fast-check": "4.10.2",
+    "jsdom": "31.0.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.1"
+  },
+  "dependencies": {
+    "@jitl/quickjs-wasmfile-release-sync": "0.32.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@xyflow/react": "13.0.2",
+    "quickjs-emscripten-core": "0.32.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  }
+}

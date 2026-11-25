@@ -1,0 +1,254 @@
+/*
+ * Theme variables (--ob-*) are published on <html> by the Theme_Adapter (src/webview/theme).
+ * The fallbacks below are built-in dark colors used before the adapter runs (Req 4.9).
+ */
+/* Native controls that remain (checkboxes, spinners, scrollbars) follow the IDE theme. */
+:root {
+  color-scheme: var(--ob-color-scheme, dark);
+  accent-color: var(--ob-focus, #007fd4);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--ob-font-family, var(--vscode-editor-font-family, monospace));
+  font-size: var(--ob-font-size, var(--vscode-editor-font-size, 13px));
+  color: var(--ob-fg, #d4d4d4);
+  background: var(--ob-bg, #1e1e1e);
+}
+
+.ob-app {
+  height: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button {
+  color: var(--ob-button-fg, #ffffff);
+  background: var(--ob-button-bg, #0e639c);
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+
+input,
+select,
+textarea {
+  color: var(--ob-input-fg, #cccccc);
+  background: var(--ob-input-bg, #3c3c3c);
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+
+.ob-palette,
+.ob-properties {
+  color: var(--ob-panel-fg, #cccccc);
+  background: var(--ob-panel-bg, #252526);
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+
+.ob-palette {
+  color: var(--ob-toolbar-fg, #cccccc);
+  background: var(--ob-toolbar-bg, #252526);
+}
+
+/* Icon buttons (tool palette, export group). */
+.ob-palette button,
+.ob-export button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  color: var(--ob-toolbar-fg, #cccccc);
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  cursor: pointer;
+}
+
+.ob-export {
+  padding: 4px;
+  border-radius: 6px;
+  background: var(--ob-toolbar-bg, #252526);
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+
+.ob-palette button:hover,
+.ob-export button:hover {
+  background: color-mix(in srgb, var(--ob-toolbar-fg, #cccccc) 12%, transparent);
+}
+
+.ob-palette button[aria-pressed='true'] {
+  color: var(--ob-button-fg, #ffffff);
+  background: var(--ob-button-bg, #0e639c);
+}
+
+.ob-palette button:focus-visible,
+.ob-export button:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+
+.ob-icon {
+  display: block;
+  pointer-events: none;
+}
+
+/* High contrast: every control keeps a visible border (Req 4.3). */
+body.vscode-high-contrast .ob-palette button,
+body.vscode-high-contrast-light .ob-palette button,
+body.vscode-high-contrast .ob-export button,
+body.vscode-high-contrast-light .ob-export button {
+  border-color: var(--ob-contrast-border, #6fc3df);
+}
+
+.ob-context-menu {
+  color: var(--ob-menu-fg, #cccccc);
+  background: var(--ob-menu-bg, #252526);
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+
+.ob-context-menu button {
+  color: var(--ob-menu-fg, #cccccc);
+  background: transparent;
+}
+
+.ob-prop-error {
+  color: var(--vscode-errorForeground, #f14c4c);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 2px;
+}
+
+/* High contrast: every control keeps a visible border and its foreground color (Req 4.3). */
+body.vscode-high-contrast button,
+body.vscode-high-contrast-light button,
+body.vscode-high-contrast input,
+body.vscode-high-contrast-light input,
+body.vscode-high-contrast select,
+body.vscode-high-contrast-light select,
+body.vscode-high-contrast textarea,
+body.vscode-high-contrast-light textarea,
+body.vscode-high-contrast .ob-palette,
+body.vscode-high-contrast-light .ob-palette,
+body.vscode-high-contrast .ob-properties,
+body.vscode-high-contrast-light .ob-properties,
+body.vscode-high-contrast .ob-context-menu,
+body.vscode-high-contrast-light .ob-context-menu,
+body.vscode-high-contrast .ob-context-menu button,
+body.vscode-high-contrast-light .ob-context-menu button {
+  border: 1px solid var(--ob-contrast-border, #6fc3df);
+}
+
+.ob-modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.ob-modal {
+  box-sizing: border-box;
+  min-width: 320px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  line-height: 1.5;
+  border-radius: 8px;
+  background: var(--ob-bg, var(--vscode-editor-background));
+  color: var(--ob-fg, var(--vscode-foreground));
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+.ob-modal h2 { margin: 0 0 4px; font-size: 1.1em; font-weight: 600; }
+.ob-modal p { margin: 0; }
+.ob-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.ob-modal-actions button,
+.ob-properties-actions button {
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ob-modal-actions button:disabled { opacity: 0.5; cursor: default; }
+.ob-export { display: flex; gap: 8px; }
+
+/* Labelled fields: label above the control (properties panel, export dialog). */
+.ob-field,
+.ob-prop {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ob-field > label,
+.ob-prop > label {
+  font-size: 0.92em;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+.ob-field input[type='text'],
+.ob-prop input[type='text'],
+.ob-field .ob-select,
+.ob-prop .ob-select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ob-field input[type='text'],
+.ob-prop input[type='text'] {
+  min-height: 28px;
+  padding: 4px 8px;
+  line-height: 1.5;
+  border-radius: 4px;
+}
+
+.ob-field input[type='text']:focus,
+.ob-prop input[type='text']:focus {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 0;
+  border-color: var(--ob-focus, #007fd4);
+}
+
+.ob-field input[aria-invalid='true'],
+.ob-prop input[aria-invalid='true'] {
+  border-color: var(--vscode-inputValidation-errorBorder, var(--vscode-errorForeground, #f14c4c));
+}
+
+.ob-field input[type='checkbox'] { margin: 0 6px 0 0; }
+
+.ob-prop-error {
+  display: block;
+  margin: 0;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+/* Rounded popups. */
+.ob-context-menu {
+  box-sizing: border-box;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+
+.ob-context-menu button {
+  border-radius: 4px;
+}
+
+.ob-palette,
+.ob-properties,
+.ob-export {
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}

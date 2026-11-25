@@ -1,0 +1,94 @@
+.ob-select {
+  position: relative;
+  display: inline-block;
+  min-width: 0;
+}
+
+.ob-select-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 8px;
+  line-height: 1.5;
+  text-align: left;
+  border-radius: 4px;
+  color: var(--ob-dropdown-fg, var(--ob-input-fg, #cccccc));
+  background: var(--ob-dropdown-bg, var(--ob-input-bg, #3c3c3c));
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-dropdown-border, var(--ob-ui-border, #80808059));
+  cursor: pointer;
+}
+
+.ob-select-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ob-select-button[data-mixed='true'] .ob-select-value {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.ob-select-button:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 0;
+  border-color: var(--ob-focus, #007fd4);
+}
+
+.ob-select-button[aria-invalid='true'] {
+  border-color: var(--vscode-inputValidation-errorBorder, var(--vscode-errorForeground, #f14c4c));
+}
+
+.ob-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ob-select-chevron {
+  flex: none;
+  opacity: 0.8;
+}
+
+.ob-select-list {
+  position: fixed;
+  z-index: 1100;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+  color: var(--ob-dropdown-fg, var(--ob-menu-fg, #cccccc));
+  background: var(--ob-menu-bg, var(--ob-dropdown-bg, #252526));
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  border-radius: 6px;
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+
+.ob-select-option {
+  padding: 4px 8px;
+  line-height: 1.5;
+  border-radius: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ob-select-option.is-active {
+  background: var(--ob-list-hover-bg, #2a2d2e);
+}
+
+.ob-select-option.is-selected {
+  color: var(--ob-list-active-fg, #ffffff);
+  background: var(--ob-list-active-bg, #04395e);
+}
+
+body.vscode-high-contrast .ob-select-option.is-active,
+body.vscode-high-contrast-light .ob-select-option.is-active {
+  outline: 1px dashed var(--ob-focus, #f38518);
+  outline-offset: -1px;
+}

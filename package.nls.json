@@ -1,0 +1,22 @@
+{
+  "openboard.displayName": "OpenBoard",
+  "openboard.description": "Whiteboard custom editor for VS Code-compatible hosts",
+  "openboard.command.newBoard.title": "OpenBoard: New Board",
+  "openboard.command.exportBoard.title": "OpenBoard: Export Board",
+  "openboard.command.zoomToFit.title": "OpenBoard: Zoom to Fit",
+  "openboard.command.toggleGrid.title": "OpenBoard: Toggle Grid",
+  "openboard.command.toggleMinimap.title": "OpenBoard: Toggle Minimap",
+  "openboard.command.openAsText.title": "OpenBoard: Open as Text",
+  "openboard.command.copyMcpConfig.title": "OpenBoard: Copy MCP Server Config",
+  "openboard.config.mcp.enabled": "Open the local MCP channel for this window so agents (via the OpenBoard MCP server) can use OpenBoard tools. Local named pipe / Unix socket only; never a network port.",
+  "openboard.customEditor.displayName": "OpenBoard Whiteboard",
+  "openboard.language.name": "OpenBoard",
+  "openboard.config.title": "OpenBoard",
+  "openboard.config.defaultExportScale": "Default pixel scale (1 to 4) used when exporting a board to a raster image.",
+  "openboard.config.defaultExportBackground": "Default background used when exporting a board.",
+  "openboard.config.gridSpacing": "Grid spacing in board units (4 to 200).",
+  "openboard.config.defaultFontFamily": "Default font family for new text elements (1 to 100 characters). Leave empty to use the editor font family.",
+  "openboard.config.autoLayoutDirection": "Default direction used by the auto-layout tool.",
+  "openboard.untrusted.description": "In an untrusted workspace OpenBoard can view and edit boards, but tools that write other files are disabled.",
+  "openboard.virtual.description": "Boards can be edited in virtual workspaces; export and file-writing tools depend on the file system provider."
+}

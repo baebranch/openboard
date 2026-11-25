@@ -1,0 +1,304 @@
+/* The canvas fills the viewport behind the shell; shell chrome sits above it. */
+.ob-canvas-host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.ob-app {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.ob-app > * {
+  pointer-events: auto;
+}
+
+/*
+ * Shell chrome must sit above the fixed canvas. Without its own positioning, an in-flow sibling is
+ * painted BELOW a positioned z-index:0 element, so the full-screen canvas hid every panel.
+ */
+.ob-app > :not(.ob-canvas-host) {
+  position: fixed;
+  z-index: 2;
+}
+
+.ob-app > .ob-canvas-host {
+  pointer-events: none;
+}
+
+/* Floating panel layout over the canvas. */
+.ob-app > .ob-palette {
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.ob-app > .ob-export {
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+}
+
+/* Shared by the properties panel (max-height) and the minimap (size/position). */
+.ob-app {
+  --ob-minimap-width: 200px;
+  --ob-minimap-height: 140px;
+  --ob-minimap-offset: 12px;
+  --ob-properties-top: 56px;
+  --ob-panel-gap: 12px;
+}
+
+.ob-app > .ob-properties {
+  top: var(--ob-properties-top);
+  right: 12px;
+  box-sizing: border-box;
+  width: 240px;
+  /* No minimap: use the full height. */
+  max-height: calc(100vh - var(--ob-properties-top) - var(--ob-panel-gap));
+  overflow: auto;
+  padding: 12px;
+  line-height: 1.5;
+  border-radius: 6px;
+}
+
+/* Minimap shown: the panel's bottom stays --ob-panel-gap above the minimap's top edge. */
+.ob-app:has(.ob-minimap) > .ob-properties {
+  max-height: calc(
+    100vh - var(--ob-properties-top) - var(--ob-minimap-offset) - var(--ob-minimap-height) - var(--ob-panel-gap)
+  );
+}
+
+.ob-properties-title {
+  margin: 0 0 10px;
+  font-size: 1.1em;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ob-properties-empty {
+  margin: 0;
+}
+
+.ob-properties form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Short fields share a row (X | Y, Fill | Stroke, ...); a lone field takes the full width. */
+.ob-prop-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ob-prop-row > .ob-prop {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.ob-app > .ob-notices {
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ob-app > .ob-notices:empty {
+  display: none;
+}
+
+.ob-app > .ob-notices li {
+  padding: 6px 10px;
+  margin-top: 4px;
+  border-radius: 6px;
+  color: var(--ob-panel-fg, #cccccc);
+  background: var(--ob-panel-bg, #252526);
+  border: 1px solid var(--ob-ui-border, #80808059);
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+
+/* Modals and context menus position themselves; keep them on top of the panels. */
+.ob-app > .ob-modal-backdrop,
+.ob-app > .ob-context-menu {
+  z-index: 10;
+}
+
+.ob-app > .ob-canvas-host .ob-canvas {
+  pointer-events: auto;
+}
+
+.ob-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ob-bg, #1e1e1e);
+}
+
+.ob-canvas .react-flow {
+  --xy-background-color: var(--ob-bg, #1e1e1e);
+  /* Dots: the theme border color mixed toward the foreground so they read on dark and light themes. */
+  --xy-background-pattern-color: color-mix(in srgb, var(--ob-fg, #d4d4d4) 35%, var(--ob-border, rgba(128, 128, 128, 0.5)));
+  background: var(--ob-bg, #1e1e1e);
+}
+
+.ob-canvas .react-flow__node {
+  /* Rendering is done by the shared SVG renderer; the wrapper adds no chrome. */
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.ob-tool-hand .react-flow__pane {
+  cursor: grab;
+}
+
+.ob-canvas:not(.ob-tool-select):not(.ob-tool-hand) .react-flow__pane,
+.ob-canvas:not(.ob-tool-select):not(.ob-tool-hand) .react-flow__node {
+  cursor: crosshair;
+}
+
+.ob-node {
+  position: relative;
+}
+
+.ob-handle {
+  width: 8px;
+  height: 8px;
+  background: var(--ob-focus, #3794ff);
+  border: 1px solid var(--ob-bg, #1e1e1e);
+  opacity: 0;
+}
+
+.react-flow__node:hover .ob-handle,
+.react-flow__node.selected .ob-handle,
+.react-flow__handle.connectingfrom,
+.react-flow__handle.connectingto {
+  opacity: 1;
+}
+
+.ob-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.ob-guide {
+  stroke: var(--ob-focus, #3794ff);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.ob-marquee {
+  fill: color-mix(in srgb, var(--ob-focus, #3794ff) 15%, transparent);
+  stroke: var(--ob-focus, #3794ff);
+  stroke-width: 1;
+}
+
+.ob-draft {
+  fill: none;
+  stroke: var(--ob-focus, #3794ff);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ob-draft-erase {
+  stroke: var(--vscode-errorForeground, #f14c4c);
+}
+
+.ob-selection {
+  position: absolute;
+  z-index: 6;
+  box-sizing: border-box;
+  /* Uses the text colour, so it always contrasts with the canvas background (light, dark, high contrast). */
+  border: 1px solid var(--ob-fg, #d4d4d4);
+  pointer-events: none;
+}
+
+.ob-resize-handle,
+.ob-rotate-handle {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: auto;
+  background: var(--ob-bg, #1e1e1e);
+  border: 1px solid var(--ob-fg, #d4d4d4);
+}
+
+.ob-resize-handle {
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+}
+
+.ob-rotate-handle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  left: 50%;
+  top: -28px;
+  margin-left: -6px;
+  cursor: grab;
+}
+
+.ob-h-nw { left: 0; top: 0; cursor: nwse-resize; }
+.ob-h-n { left: 50%; top: 0; cursor: ns-resize; }
+.ob-h-ne { left: 100%; top: 0; cursor: nesw-resize; }
+.ob-h-e { left: 100%; top: 50%; cursor: ew-resize; }
+.ob-h-se { left: 100%; top: 100%; cursor: nwse-resize; }
+.ob-h-s { left: 50%; top: 100%; cursor: ns-resize; }
+.ob-h-sw { left: 0; top: 100%; cursor: nesw-resize; }
+.ob-h-w { left: 0; top: 50%; cursor: ew-resize; }
+
+.ob-minimap {
+  position: absolute;
+  right: var(--ob-minimap-offset, 12px);
+  bottom: var(--ob-minimap-offset, 12px);
+  z-index: 7;
+  box-sizing: border-box;
+  width: var(--ob-minimap-width, 200px);
+  height: var(--ob-minimap-height, 140px);
+  background: var(--ob-panel-bg, #252526);
+  border: 1px solid var(--ob-ui-border, rgba(128, 128, 128, 0.4));
+  border-radius: 6px;
+  /* An outer <svg> honors overflow + border-radius, so the content clips to the rounded corners. */
+  overflow: hidden;
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+  cursor: pointer;
+}
+
+.ob-minimap-el {
+  fill: var(--ob-fg, #d4d4d4);
+  opacity: 0.35;
+}
+
+.ob-minimap-view {
+  fill: none;
+  stroke: var(--ob-focus, #3794ff);
+  stroke-width: 1.5;
+}
+
+.ob-zoom {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 7;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--ob-panel-fg, #cccccc);
+  background: var(--ob-panel-bg, #252526);
+  border: 1px solid var(--ob-ui-border, rgba(128, 128, 128, 0.4));
+  border-radius: 6px;
+}

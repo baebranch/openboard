@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "openboard: build",
+      "type": "shell",
+      "command": "npm run build:schemas && npm run build",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "openboard: watch",
+      "type": "shell",
+      "command": "npm run watch",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "openboard: package (vsix)",
+      "detail": "Minified production build + manifest check, outputs openboard.vsix",
+      "type": "shell",
+      "command": "npm run package -- --out openboard.vsix",
+      "problemMatcher": []
+    },
+    {
+      "label": "openboard: publish to VS Code Marketplace",
+      "detail": "Requires the VSCE_PAT environment variable (Azure DevOps PAT, Marketplace > Manage scope)",
+      "type": "shell",
+      "command": "npx vsce publish --packagePath openboard.vsix",
+      "dependsOn": ["openboard: package (vsix)"],
+      "problemMatcher": []
+    },
+    {
+      "label": "openboard: publish to Open VSX",
+      "detail": "Requires the OVSX_PAT environment variable (open-vsx.org access token)",
+      "type": "shell",
+      "command": "npx --yes ovsx publish openboard.vsix",
+      "dependsOn": ["openboard: package (vsix)"],
+      "problemMatcher": []
+    },
+    {
+      "label": "openboard: publish to all marketplaces",
+      "detail": "Package once, then publish to the VS Code Marketplace and Open VSX",
+      "type": "shell",
+      "command": "echo Published to all marketplaces",
+      "dependsOn": [
+        "openboard: publish to VS Code Marketplace",
+        "openboard: publish to Open VSX"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}

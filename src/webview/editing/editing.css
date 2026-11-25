@@ -1,0 +1,39 @@
+.ob-editing {
+  position: absolute;
+  z-index: 20;
+}
+.ob-text-editor {
+  box-sizing: border-box;
+  outline: 1px solid var(--vscode-focusBorder, #007fd4);
+  background: var(--vscode-editor-background, #1e1e1e);
+  color: var(--vscode-editor-foreground, #ccc);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 0;
+}
+.ob-image-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+  background: var(--vscode-editorWidget-background, #252526);
+  color: var(--vscode-editorWidget-foreground, #ccc);
+  border: 1px solid var(--vscode-editorWidget-border, #454545);
+  font-size: 12px;
+}
+.ob-image-controls label {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.ob-image-controls fieldset {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  border: 0;
+  padding: 0;
+}
+.ob-image-controls fieldset input {
+  width: 56px;
+}

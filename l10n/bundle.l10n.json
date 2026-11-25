@@ -1,0 +1,11 @@
+{
+  "File name": "File name",
+  "Export failed": "Export failed",
+  "OpenBoard: this board is read-only.": "OpenBoard: this board is read-only.",
+  "OpenBoard: an active board is required for this command.": "OpenBoard: an active board is required for this command.",
+  "This board was changed on disk, but you have unsaved edits. Which version do you want to keep?": "This board was changed on disk, but you have unsaved edits. Which version do you want to keep?",
+  "Keep local": "Keep local",
+  "Load disk version": "Load disk version",
+  "Compare as JSON text": "Compare as JSON text",
+  "OpenBoard MCP server config copied to the clipboard.": "OpenBoard MCP server config copied to the clipboard."
+}

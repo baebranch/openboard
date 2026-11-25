@@ -1,0 +1,174 @@
+import { intersects, rotatedBounds, unionBounds } from '../model/geometry';
+import type { BoardDocument, Bounds, Element, ElementId } from '../model/types';
+
+export const EXPORT_MAX_PIXELS = 16384;
+export const EXPORT_PADDING_MIN = 0;
+export const EXPORT_PADDING_MAX = 256;
+
+export const EXPORT_FORMATS = ['png', 'svg', 'jpeg', 'webp', 'pdf'] as const;
+export type ExportFormat = (typeof EXPORT_FORMATS)[number];
+export const EXPORT_SCALES = [1, 2, 3, 4] as const;
+export type ExportScale = (typeof EXPORT_SCALES)[number];
+export type ExportBackground = 'transparent' | 'white' | 'theme';
+
+export type ExportScope =
+  | { kind: 'board' }
+  | { kind: 'selection'; ids: ElementId[] }
+  | { kind: 'frame'; id: ElementId }
+  | { kind: 'allFrames' };
+
+export interface ExportOptions {
+  format: ExportFormat;
+  scope: ExportScope;
+  scale: ExportScale;
+  /** Integer 0..256. */
+  padding: number;
+  background: ExportBackground;
+  matchTheme: boolean;
+  /** PNG only. */
+  embedBoard?: boolean;
+}
+
+export type ExportErrorCode = 'empty-scope' | 'size-limit' | 'invalid-padding' | 'invalid-option';
+
+export interface ExportError {
+  code: ExportErrorCode;
+  message: string;
+}
+
+export type ExportResult<T> = { ok: true; value: T } | { ok: false; error: ExportError };
+
+export const PADDING_RANGE_MESSAGE = `Padding must be a whole number from ${EXPORT_PADDING_MIN} to ${EXPORT_PADDING_MAX}.`;
+export const EMPTY_SCOPE_MESSAGE = 'There is nothing to export.';
+export const SIZE_LIMIT_MESSAGE = `The export exceeds the ${EXPORT_MAX_PIXELS.toLocaleString('en-US')} pixel limit on width or height.`;
+
+export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
+  format: 'png',
+  scope: { kind: 'board' },
+  scale: 1,
+  padding: 0,
+  background: 'white',
+  matchTheme: false,
+};
+
+function elementBounds(el: Element): Bounds {
+  return rotatedBounds(el);
+}
+
+/** Elements of the document that fall inside the scope region (Req 12.2, 12.15). */
+export function selectScope(doc: Pick<BoardDocument, 'elements'>, scope: ExportScope): Element[] {
+  const all = doc.elements;
+  switch (scope.kind) {
+    case 'board':
+      return [...all];
+    case 'selection': {
+      const ids = new Set(scope.ids);
+      return all.filter((e) => ids.has(e.id));
+    }
+    case 'frame': {
+      const frame = all.find((e) => e.id === scope.id && e.type === 'frame');
+      return frame ? inFrame(all, frame) : [];
+    }
+    case 'allFrames': {
+      const frames = all.filter((e) => e.type === 'frame');
+      return all.filter((e) => frames.some((f) => e.id === f.id || belongsToFrame(e, f)));
+    }
+  }
+}
+
+/** Elements for one Frame: the frame, its children, and anything intersecting its bounds. */
+export function inFrame(elements: readonly Element[], frame: Element): Element[] {
+  return elements.filter((e) => e.id === frame.id || belongsToFrame(e, frame));
+}
+
+function belongsToFrame(e: Element, frame: Element): boolean {
+  return e.parentId === frame.id || intersects(elementBounds(e), elementBounds(frame));
+}
+
+/** Per-Frame element lists for the all-Frames scope (one file per Frame). */
+export function selectFrameScopes(
+  doc: Pick<BoardDocument, 'elements'>,
+): { frame: Element; elements: Element[] }[] {
+  return doc.elements.filter((e) => e.type === 'frame').map((frame) => ({ frame, elements: inFrame(doc.elements, frame) }));
+}
+
+/** Union of the elements' (rotated) bounds, or undefined when empty. */
+export function contentBounds(elements: readonly Element[]): Bounds | undefined {
+  return unionBounds(elements.map(elementBounds));
+}
+
+export function validatePadding(x: unknown): x is number {
+  return (
+    typeof x === 'number' && Number.isInteger(x) && x >= EXPORT_PADDING_MIN && x <= EXPORT_PADDING_MAX
+  );
+}
+
+/** Returns the candidate when valid, otherwise the previous valid value (Req 12.6). */
+export function resolvePadding(candidate: unknown, previous: number): { value: number; error?: ExportError } {
+  if (validatePadding(candidate)) return { value: candidate };
+  return { value: previous, error: { code: 'invalid-padding', message: PADDING_RANGE_MESSAGE } };
+}
+
+/** Output pixel size: (bounds + padding on all sides) * scale, rounded up to whole pixels. */
+export function computeOutputSize(
+  bounds: Pick<Bounds, 'width' | 'height'>,
+  padding: number,
+  scale: number,
+): { w: number; h: number } {
+  return {
+    w: Math.ceil((bounds.width + 2 * padding) * scale),
+    h: Math.ceil((bounds.height + 2 * padding) * scale),
+  };
+}
+
+/** Validates scope emptiness and the pixel limit; returns the output size on success. */
+export function checkLimits(
+  elements: readonly Element[],
+  padding: number,
+  scale: number,
+): ExportResult<{ w: number; h: number; bounds: Bounds }> {
+  const bounds = contentBounds(elements);
+  if (!bounds) return { ok: false, error: { code: 'empty-scope', message: EMPTY_SCOPE_MESSAGE } };
+  const size = computeOutputSize(bounds, padding, scale);
+  if (size.w > EXPORT_MAX_PIXELS || size.h > EXPORT_MAX_PIXELS) {
+    return { ok: false, error: { code: 'size-limit', message: SIZE_LIMIT_MESSAGE } };
+  }
+  return { ok: true, value: { ...size, bounds } };
+}
+
+/** Validates format, scale, padding and background combinations (Req 12.3 to 12.6). */
+export function validateOptions(opts: ExportOptions): ExportError | undefined {
+  if (!(EXPORT_FORMATS as readonly string[]).includes(opts.format)) {
+    return { code: 'invalid-option', message: `Unsupported format: ${String(opts.format)}.` };
+  }
+  if (!(EXPORT_SCALES as readonly number[]).includes(opts.scale)) {
+    return { code: 'invalid-option', message: 'Scale must be 1, 2, 3, or 4.' };
+  }
+  if (!validatePadding(opts.padding)) return { code: 'invalid-padding', message: PADDING_RANGE_MESSAGE };
+  if (opts.background === 'transparent' && opts.format !== 'png' && opts.format !== 'webp') {
+    return { code: 'invalid-option', message: 'Transparent background is only available for PNG and WebP.' };
+  }
+  if (opts.embedBoard && opts.format !== 'png') {
+    return { code: 'invalid-option', message: 'Embedding the board is only available for PNG.' };
+  }
+  return undefined;
+}
+
+/** Whether the format is a raster format subject to scale and the pixel limit. */
+export function isRaster(format: ExportFormat): boolean {
+  return format === 'png' || format === 'jpeg' || format === 'webp';
+}
+
+/** Full pre-flight check for one export region. */
+export function prepareExport(
+  doc: Pick<BoardDocument, 'elements'>,
+  opts: ExportOptions,
+): ExportResult<{ elements: Element[]; bounds: Bounds; w: number; h: number }> {
+  const err = validateOptions(opts);
+  if (err) return { ok: false, error: err };
+  const elements = selectScope(doc, opts.scope);
+  const scale = isRaster(opts.format) ? opts.scale : 1;
+  const r = checkLimits(elements, opts.padding, scale);
+  if (!r.ok) return r;
+  return { ok: true, value: { elements, ...r.value } };
+}

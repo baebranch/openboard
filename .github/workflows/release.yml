@@ -1,0 +1,68 @@
+name: Release
+
+# Push a tag such as v0.0.1 to build the extension, create a GitHub release with
+# the .vsix attached, and (when the tokens are configured) publish to the
+# Visual Studio Marketplace and Open VSX.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Check tag matches package.json version
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "v${PKG_VERSION}" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version ${PKG_VERSION}" >&2
+            exit 1
+          fi
+
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run package -- --out openboard.vsix
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { found=1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No CHANGELOG entry found for ${VERSION}" >&2
+            exit 1
+          fi
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" openboard.vsix \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md
+
+      - name: Publish to Visual Studio Marketplace
+        if: ${{ env.VSCE_PAT != '' }}
+        run: npx vsce publish --packagePath openboard.vsix
+
+      - name: Publish to Open VSX
+        if: ${{ env.OVSX_PAT != '' }}
+        run: npx --yes ovsx publish openboard.vsix
