@@ -25,6 +25,7 @@ export const TOOL_SHORTCUTS = {
   f: 'frame',
   s: 'sticky',
   e: 'eraser',
+  k: 'icon',
 } as const;
 
 export type ShortcutToolId = (typeof TOOL_SHORTCUTS)[keyof typeof TOOL_SHORTCUTS];

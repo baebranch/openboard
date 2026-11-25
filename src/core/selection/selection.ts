@@ -20,11 +20,46 @@ export function marqueeBounds(a: Point, b: Point): Bounds {
   };
 }
 
-/** Topmost element (last in z-order) whose bounds contain the point, or undefined. */
-export function hitTest(elements: readonly Box[] & readonly { id: ElementId }[], p: Point): ElementId | undefined {
+type HitItem = Box & { id: ElementId; parentId?: ElementId; type?: string; clipContent?: boolean };
+
+const inBox = (e: Box, p: Point): boolean => p.x >= e.x && p.x <= e.x + e.width && p.y >= e.y && p.y <= e.y + e.height;
+
+/**
+ * True when the point lies in a part of `e` hidden by a clipping ancestor Frame (Req 10.3):
+ * some ancestor with `clipContent` does not contain the point. Cycle-safe.
+ */
+export function isClippedAt(
+  e: { id: ElementId; parentId?: ElementId },
+  byId: ReadonlyMap<ElementId, HitItem>,
+  p: Point,
+): boolean {
+  const seen = new Set<ElementId>([e.id]);
+  let pid = e.parentId;
+  while (pid !== undefined && !seen.has(pid)) {
+    seen.add(pid);
+    const a = byId.get(pid);
+    if (!a) return false;
+    if (a.type === 'frame' && a.clipContent === true && !inBox(a, p)) return true;
+    pid = a.parentId;
+  }
+  return false;
+}
+
+/**
+ * Topmost element (last in z-order) whose bounds contain the point, or undefined.
+ * A hit on a part of a descendant clipped away by a clipping Frame is ignored and falls
+ * through to the next element or the background (Req 10.3).
+ */
+export function hitTest(elements: readonly HitItem[], p: Point): ElementId | undefined {
+  let byId: Map<ElementId, HitItem> | undefined;
   for (let i = elements.length - 1; i >= 0; i--) {
     const e = elements[i]!;
-    if (p.x >= e.x && p.x <= e.x + e.width && p.y >= e.y && p.y <= e.y + e.height) return e.id;
+    if (!inBox(e, p)) continue;
+    if (e.parentId !== undefined) {
+      byId ??= new Map(elements.map((x) => [x.id, x]));
+      if (isClippedAt(e, byId, p)) continue;
+    }
+    return e.id;
   }
   return undefined;
 }

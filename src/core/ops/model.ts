@@ -13,6 +13,7 @@ import type {
   ElementId,
   ElementStyle,
   FlowNodeProps,
+  FrameElement,
   FrameProps,
   FreehandProps,
   ImageProps,
@@ -21,6 +22,10 @@ import type {
   Viewport,
   ZOrderMode,
 } from '../model/types';
+import { ROOT_OVERRIDE_KEY, type Override } from '../components/types';
+import { validateNewToken, validateTokenName, validateTokenValue } from '../tokens/validate';
+import type { TokenCategory, TokenCollection, TokenValue } from '../tokens/types';
+import { needsDerivedPass, runDerivedGeometryPass } from './derived-geometry';
 import { InvariantError, checkInvariants } from './invariants';
 import { applyPatches } from './patches';
 import type { Change, HistoryEntry, HistorySink, Patch } from './patches';
@@ -60,6 +65,14 @@ export interface Tx {
   removeLibraryComponent(id: string): void;
   setMeta(patch: Partial<BoardMeta>): void;
   setSettings(settings: BoardSettings | undefined): void;
+  /** Adds a design token. Rejects an invalid or duplicate name, an invalid value, or a full category. */
+  createToken(category: TokenCategory, name: string, value: TokenValue): void;
+  /** Changes the value of an existing token. Element references are untouched. */
+  updateToken(category: TokenCategory, name: string, value: TokenValue): void;
+  /** Renames a token key only; the caller rewrites references in the same transaction. */
+  renameToken(category: TokenCategory, oldName: string, newName: string): void;
+  /** Removes a token key only; the caller is responsible for checking references first. */
+  deleteToken(category: TokenCategory, name: string): void;
   /** Read-only view of the document as staged so far. */
   readonly doc: BoardDocument;
 }
@@ -95,6 +108,7 @@ export class BoardModel {
 
   private doc: BoardDocument;
   private active = false;
+  private lastDerivedIds: ElementId[] = [];
   private scope: { label: string; entries: HistoryEntry[] } | undefined;
   private readonly now: () => string;
   private readonly listeners = new Set<(e: ChangeEvent) => void>();
@@ -104,6 +118,13 @@ export class BoardModel {
     this.doc = doc;
     this.history = options.history ?? nullHistory;
     this.now = options.now ?? (() => new Date().toISOString());
+  }
+
+  /** Ids changed by the derived-geometry pass of the last transaction; clears on read. */
+  takeLastDerivedIds(): ElementId[] {
+    const ids = this.lastDerivedIds;
+    this.lastDerivedIds = [];
+    return ids;
   }
 
   getDocument(): BoardDocument {
@@ -143,7 +164,18 @@ export class BoardModel {
       } finally {
         draft.close();
       }
-      const { doc, patches, inversePatches } = draft.finish();
+      let { doc, patches, inversePatches } = draft.finish();
+      this.lastDerivedIds = [];
+      // A throw here propagates before anything is committed, like a throw from `fn`.
+      if (patches.length > 0 && needsDerivedPass(doc)) {
+        const dg = runDerivedGeometryPass(doc);
+        if (dg.patches.length > 0) {
+          doc = dg.doc;
+          patches = [...patches, ...dg.patches];
+          inversePatches = [...dg.inversePatches, ...inversePatches];
+        }
+        this.lastDerivedIds = dg.changedIds;
+      }
       const problems = checkInvariants(doc);
       if (problems.length > 0) throw new InvariantError(problems);
       // A transaction that changed nothing is not an edit: no history entry, no change event.
@@ -222,10 +254,82 @@ export class BoardModel {
   }
 }
 
+function instanceChildError(id: ElementId, ownerId: ElementId): Error {
+  return new Error(
+    `Element ${id} is an Instance_Child of component instance ${ownerId}; the instance must be detached to edit it.`,
+  );
+}
+
+const sameValue = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+function mergeOverride(
+  overrides: Record<string, Override> | undefined,
+  key: string,
+  add: Override,
+): Record<string, Override> {
+  return { ...overrides, [key]: { ...overrides?.[key], ...add } };
+}
+
+const OVERRIDABLE_STYLE_KEYS = ['fill', 'stroke', 'opacity', 'imageFill'] as const;
+const OVERRIDABLE_TOP_KEYS = ['textColor', 'fontWeight'] as const;
+
+/**
+ * Splits an edit of an Instance_Child into the Override it stands for. Throws when the edit touches
+ * anything that is not an Overridable_Property. Returns undefined when nothing differs.
+ */
+function analyseInstanceChildPatch(
+  old: Element,
+  patch: ElementPatch,
+  ownerId: ElementId,
+): { patch: ElementPatch; override: Override } | undefined {
+  const cur = old as unknown as Record<string, unknown>;
+  const kept: Record<string, unknown> = {};
+  const override: Record<string, unknown> = {};
+  const reject = (): never => {
+    throw instanceChildError(old.id, ownerId);
+  };
+  for (const [key, value] of Object.entries(patch)) {
+    if (key === 'id' || key === 'type') {
+      if (value !== undefined && value !== cur[key]) reject();
+    } else if (key === 'style') {
+      const style: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries((value ?? {}) as Record<string, unknown>)) {
+        const was = (old.style as unknown as Record<string, unknown>)[k];
+        if (sameValue(v, was)) continue;
+        if (!(OVERRIDABLE_STYLE_KEYS as readonly string[]).includes(k) || v === undefined) reject();
+        style[k] = v;
+        override[k] = v;
+      }
+      if (Object.keys(style).length > 0) kept.style = style;
+    } else if (sameValue(value, cur[key])) {
+      continue;
+    } else if (value === undefined) {
+      reject();
+    } else if ((OVERRIDABLE_TOP_KEYS as readonly string[]).includes(key)) {
+      kept[key] = value;
+      override[key] = value;
+    } else if (key === 'runs' && Array.isArray(cur.runs)) {
+      kept[key] = value;
+      override.text = (value as { text: string }[]).map((r) => r.text).join('');
+    } else if (key === 'name' && old.type === 'icon') {
+      kept[key] = value;
+      override.icon = value;
+    } else if (key === 'label' && old.type === 'edge') {
+      kept[key] = value;
+      override.text = value;
+    } else {
+      reject();
+    }
+  }
+  if (Object.keys(kept).length === 0) return undefined;
+  return { patch: kept as ElementPatch, override: override as Override };
+}
+
 class Draft implements Tx {
   private meta: BoardMeta;
   private viewport: Viewport;
   private settings: BoardSettings | undefined;
+  private tokens: TokenCollection | undefined;
   private elements: Element[];
   private assets: Asset[];
   private library: LibraryComponent[];
@@ -246,6 +350,7 @@ class Draft implements Tx {
     this.meta = base.meta;
     this.viewport = base.viewport;
     this.settings = base.settings;
+    this.tokens = base.tokens;
     this.elements = base.elements;
     this.assets = base.assets;
     this.library = base.library;
@@ -287,6 +392,14 @@ class Draft implements Tx {
     this.assertOpen();
     const i = this.requireIndex(id);
     const old = this.elements[i] as Element;
+    const owner = this.instanceChildOwner(id);
+    let captured: Override | undefined;
+    if (owner) {
+      const analysed = analyseInstanceChildPatch(old, patch, owner.ownerId);
+      if (!analysed) return; // nothing differs from the current values
+      captured = analysed.override;
+      patch = analysed.patch;
+    }
     const next: Record<string, unknown> = { ...old };
     for (const [key, value] of Object.entries(patch)) {
       if (key === 'id' || key === 'type') {
@@ -294,23 +407,82 @@ class Draft implements Tx {
           throw new Error(`Element ${key} is immutable`);
         }
       } else if (key === 'style') {
-        next.style = { ...old.style, ...(value as Partial<ElementStyle>) };
+        const merged = { ...old.style, ...(value as Partial<ElementStyle>) } as Record<string, unknown>;
+        // An explicit `undefined` in the style patch removes that optional style field.
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) if (v === undefined) delete merged[k];
+        next.style = merged as unknown as ElementStyle;
       } else if (value === undefined) {
         delete next[key];
       } else {
         next[key] = value;
       }
     }
+    // An edit of an instance root size or root fill/stroke/opacity/image fill is stored as an
+    // Override on the instance itself.
+    if (
+      !owner &&
+      old.type === 'frame' &&
+      next.type === 'frame' &&
+      next.instanceOf !== undefined &&
+      !('overrides' in patch) &&
+      this.hasMaster(next.instanceOf as ElementId)
+    ) {
+      const size: Override = {};
+      if (next.width !== old.width) size.width = next.width as number;
+      if (next.height !== old.height) size.height = next.height as number;
+      // Root fill, stroke, opacity and image fill are Overrides too; the rest of the style follows the master.
+      const oldStyle = old.style as unknown as Record<string, unknown>;
+      const newStyle = next.style as unknown as Record<string, unknown>;
+      for (const k of OVERRIDABLE_STYLE_KEYS) {
+        if (newStyle[k] !== undefined && !sameValue(newStyle[k], oldStyle[k])) (size as Record<string, unknown>)[k] = newStyle[k];
+      }
+      if (Object.keys(size).length > 0) next.overrides = mergeOverride(next.overrides as Record<string, Override> | undefined, ROOT_OVERRIDE_KEY, size);
+    }
     const el = next as unknown as Element;
     this.mutableElements()[i] = el;
     this.record({ op: 'replace', path: ['elements', i], value: el }, { op: 'replace', path: ['elements', i], value: old });
+    if (owner && captured) {
+      const oi = this.requireIndex(owner.ownerId);
+      const inst = this.elements[oi] as FrameElement;
+      const updated = { ...inst, overrides: mergeOverride(inst.overrides, owner.key, captured) } as Element;
+      this.mutableElements()[oi] = updated;
+      this.record(
+        { op: 'replace', path: ['elements', oi], value: updated },
+        { op: 'replace', path: ['elements', oi], value: inst },
+      );
+    }
+  }
+
+  /** The Component_Instance owning `id` when `id` is one of its Instance_Children. */
+  private instanceChildOwner(id: ElementId): { ownerId: ElementId; key: string } | undefined {
+    const at = id.lastIndexOf('::');
+    if (at <= 0 || at + 2 >= id.length) return undefined;
+    const ownerId = id.slice(0, at);
+    const oi = this.indexOf(ownerId);
+    if (oi === undefined) return undefined;
+    const owner = this.elements[oi] as Element;
+    if (owner.type !== 'frame' || owner.instanceOf === undefined) return undefined;
+    return { ownerId, key: id.slice(at + 2) };
+  }
+
+  private hasMaster(masterId: ElementId): boolean {
+    const mi = this.indexOf(masterId);
+    if (mi === undefined) return false;
+    const m = this.elements[mi] as Element;
+    return m.type === 'frame' && m.component !== undefined;
   }
 
   remove(id: ElementId): void {
     this.assertOpen();
     this.requireIndex(id);
+    if (this.instanceChildOwner(id)) throw instanceChildError(id, this.instanceChildOwner(id)?.ownerId as string);
     // Fixed point: the element, every edge attached to a removed element.
     const doomed = new Set<ElementId>([id]);
+    // Deleting a Component_Instance deletes its derived children with it.
+    const removed = this.elements[this.requireIndex(id)] as Element;
+    if (removed.type === 'frame' && removed.instanceOf !== undefined) {
+      for (const el of this.elements) if (el.id.startsWith(`${id}::`)) doomed.add(el.id);
+    }
     let grew = true;
     while (grew) {
       grew = false;
@@ -323,6 +495,19 @@ class Draft implements Tx {
     }
     // Detach surviving children of removed frames.
     const els = this.mutableElements();
+    // Deleting a Component_Master detaches its instances in the same transaction (they keep their children).
+    if (removed.type === 'frame' && removed.component !== undefined) {
+      for (let i = 0; i < els.length; i++) {
+        const el = els[i] as Element;
+        if (el.type !== 'frame' || el.instanceOf !== id || doomed.has(el.id)) continue;
+        const { instanceOf: _io, overrides: _ov, ...rest } = el;
+        void _io;
+        void _ov;
+        const next = rest as Element;
+        els[i] = next;
+        this.record({ op: 'replace', path: ['elements', i], value: next }, { op: 'replace', path: ['elements', i], value: el });
+      }
+    }
     for (let i = 0; i < els.length; i++) {
       const el = els[i] as Element;
       if (el.parentId !== undefined && doomed.has(el.parentId) && !doomed.has(el.id)) {
@@ -446,6 +631,77 @@ class Draft implements Tx {
     this.record(fwd, inv);
   }
 
+  // --- tokens -------------------------------------------------------------
+
+  createToken(category: TokenCategory, name: string, value: TokenValue): void {
+    this.assertOpen();
+    const check = validateNewToken(this.tokens, category, name, value);
+    if (!check.ok) throw new Error(check.message);
+    this.writeTokens(this.withBucket(category, { ...this.bucket(category), [check.value.name]: check.value.value }));
+  }
+
+  updateToken(category: TokenCategory, name: string, value: TokenValue): void {
+    this.assertOpen();
+    this.requireToken(category, name);
+    const v = validateTokenValue(category, value);
+    if (!v.ok) throw new Error(v.message);
+    this.writeTokens(this.withBucket(category, { ...this.bucket(category), [name]: v.value }));
+  }
+
+  renameToken(category: TokenCategory, oldName: string, newName: string): void {
+    this.assertOpen();
+    this.requireToken(category, oldName);
+    const n = validateTokenName(newName);
+    if (!n.ok) throw new Error(n.message);
+    if (newName === oldName) return;
+    if (Object.prototype.hasOwnProperty.call(this.bucket(category), newName)) {
+      throw new Error(`A ${category} Token named "${newName}" already exists.`);
+    }
+    const next: Record<string, TokenValue> = {};
+    for (const [k, v] of Object.entries(this.bucket(category))) next[k === oldName ? newName : k] = v;
+    this.writeTokens(this.withBucket(category, next));
+  }
+
+  deleteToken(category: TokenCategory, name: string): void {
+    this.assertOpen();
+    this.requireToken(category, name);
+    const next = { ...this.bucket(category) };
+    delete next[name];
+    this.writeTokens(this.withBucket(category, next));
+  }
+
+  private bucket(category: TokenCategory): Record<string, TokenValue> {
+    return (this.tokens?.[category] ?? {}) as Record<string, TokenValue>;
+  }
+
+  private requireToken(category: TokenCategory, name: string): void {
+    if (!Object.prototype.hasOwnProperty.call(this.bucket(category), name)) {
+      throw new Error(`${category} Token not found: ${name}`);
+    }
+  }
+
+  /** Returns a collection with one category replaced; empty categories and an empty collection are dropped. */
+  private withBucket(category: TokenCategory, bucket: Record<string, TokenValue>): TokenCollection | undefined {
+    const next: Record<string, unknown> = { ...this.tokens };
+    if (Object.keys(bucket).length === 0) delete next[category];
+    else next[category] = bucket;
+    return Object.keys(next).length === 0 ? undefined : (next as TokenCollection);
+  }
+
+  private writeTokens(next: TokenCollection | undefined): void {
+    const old = this.tokens;
+    this.tokens = next;
+    const fwd: Patch =
+      next === undefined
+        ? { op: 'remove', path: ['tokens'] }
+        : { op: old === undefined ? 'add' : 'replace', path: ['tokens'], value: next };
+    const inv: Patch =
+      old === undefined
+        ? { op: 'remove', path: ['tokens'] }
+        : { op: next === undefined ? 'add' : 'replace', path: ['tokens'], value: old };
+    this.record(fwd, inv);
+  }
+
   // --- internals ----------------------------------------------------------
 
   private build(): BoardDocument {
@@ -459,6 +715,8 @@ class Draft implements Tx {
     };
     if (this.settings === undefined) delete doc.settings;
     else doc.settings = this.settings;
+    if (this.tokens === undefined) delete doc.tokens;
+    else doc.tokens = this.tokens;
     return doc;
   }
 

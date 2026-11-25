@@ -5,7 +5,7 @@ export interface Range {
   readonly max: number;
 }
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 /** Canvas coordinate range per axis (Req 3.1). */
 export const COORD_RANGE: Range = { min: -1_000_000, max: 1_000_000 };

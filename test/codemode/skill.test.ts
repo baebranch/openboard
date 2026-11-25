@@ -48,7 +48,7 @@ describe('skill', () => {
 
   it('elements topic is generated from the element schemas (every type and property)', () => {
     const docs = elementDocs(registry);
-    expect(docs.types).toHaveLength(12);
+    expect(docs.types).toHaveLength(13);
     const text = topic('elements');
     for (const t of docs.types) expect(text, t).toContain(`**${t}**`);
     for (const p of [...Object.keys(docs.common), ...Object.values(docs.extras).flatMap((e) => Object.keys(e.props))]) {
@@ -141,9 +141,10 @@ describe('exposed surface', () => {
     expect(JSON.stringify(buildSurface(names, { workspace: false }))).not.toContain('workspace"');
   });
 
-  it('openboard_call description lists the action names and points to the skill', () => {
+  it('openboard_call description is short, the enum lists the action names, and it points to the skill', () => {
     const call = buildSurface(names, { workspace: true }).find((t) => t.name === 'openboard_call')!;
-    for (const n of names) expect(call.description).toContain(shortAction(n));
+    const enumNames = (call.inputSchema as { properties: { action: { enum: string[] } } }).properties.action.enum;
+    for (const n of names) expect(enumNames).toContain(shortAction(n));
     expect(call.description).toContain('actions');
     expect(call.description.length).toBeLessThan(600);
   });

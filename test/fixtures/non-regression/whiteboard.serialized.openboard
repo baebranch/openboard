@@ -1,0 +1,98 @@
+{
+  "assets": [],
+  "elements": [
+    {
+      "baseWidth": 3,
+      "height": 60,
+      "id": "a1",
+      "points": [
+        {
+          "p": 0.5,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "p": 0.8,
+          "x": 40,
+          "y": 30
+        },
+        {
+          "x": 100,
+          "y": 60
+        }
+      ],
+      "rotation": 0,
+      "style": {
+        "cornerRadius": 0,
+        "fill": "theme:default",
+        "opacity": 1,
+        "stroke": "theme:default",
+        "strokeStyle": "solid",
+        "strokeWidth": 2
+      },
+      "type": "freehand",
+      "width": 100,
+      "x": 10,
+      "y": 10
+    },
+    {
+      "align": "left",
+      "fontFamily": "sans-serif",
+      "fontSize": 16,
+      "height": 30,
+      "id": "a2",
+      "rotation": 0,
+      "runs": [
+        {
+          "text": "Hello whiteboard"
+        },
+        {
+          "bold": true,
+          "text": " bold"
+        }
+      ],
+      "style": {
+        "cornerRadius": 0,
+        "fill": "theme:default",
+        "opacity": 1,
+        "stroke": "theme:default",
+        "strokeStyle": "solid",
+        "strokeWidth": 2
+      },
+      "type": "text",
+      "width": 200,
+      "x": 150,
+      "y": 20
+    },
+    {
+      "height": 80,
+      "id": "a3",
+      "rotation": 0,
+      "style": {
+        "cornerRadius": 8,
+        "fill": "#ffcc00",
+        "opacity": 1,
+        "stroke": "theme:default",
+        "strokeStyle": "solid",
+        "strokeWidth": 2
+      },
+      "type": "rectangle",
+      "width": 120,
+      "x": 20,
+      "y": 120
+    }
+  ],
+  "library": [],
+  "meta": {
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "id": "00000000-0000-4000-8000-000000000001",
+    "modifiedAt": "2024-01-01T00:00:00.000Z",
+    "title": "00000000-0000-4000-8000-000000000001"
+  },
+  "schemaVersion": 1,
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  }
+}

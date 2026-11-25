@@ -19,13 +19,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { center, rotatedBounds, unionBounds } from '../../core/model/geometry';
 import type { BoardDocument, Bounds, ElementId, Point, Viewport } from '../../core/model/types';
 import { eraseIntersecting, type StrokePoint } from '../../core/freehand';
-import { hitTest, marqueeBounds, marqueeSelect } from '../../core/selection';
+import { hitTest, isClippedAt, marqueeBounds, marqueeSelect } from '../../core/selection';
 import { snapToAlignment, snapToGrid, type SnapGuide } from '../../core/snap';
 import { boardToScreen, screenToBoard, zoomToFit } from '../../core/viewport';
 import { viewportForWheel } from './wheel';
 import { dispatchOp, postSelection, postViewport } from '../ops';
 import { useWebviewState } from '../store';
-import { setActiveTool, setSelection, useUiState, type ToolId } from '../uiState';
+import { setActiveTool, setSelection, uiState, useUiState, type ToolId } from '../uiState';
 import { ElementEdge, ElementNode } from './ElementNode';
 import {
   angleDeg,
@@ -37,9 +37,11 @@ import {
   drawGeometry,
   formatZoomPercent,
   freehandOp,
+  iconCreateOp,
   isDrawTool,
   movePatches,
-  moveOp,
+  dropOp,
+  findDropTarget,
   resizeBounds,
   resizeOp,
   RESIZE_HANDLES,
@@ -56,7 +58,9 @@ import {
 import { EditingLayer } from '../editing/EditingLayer';
 import { editingStore } from '../editing/editingStore';
 import { toReactFlow, type ElementPreview, type ObEdge, type ObNode } from './project';
-import { debounce, onHostViewport, onViewCommand } from './viewportBus';
+import { debounce, emitViewCommand, onFocusBounds, onHostViewport, onViewCommand } from './viewportBus';
+import { t } from '../i18n/t';
+import { Icon } from '../icons';
 import { isGridEnabled } from '../../core/model/grid';
 
 export const MIN_ZOOM = 0.02;
@@ -64,6 +68,8 @@ export const MAX_ZOOM = 8;
 const VIEWPORT_POST_DEBOUNCE_MS = 250;
 const PREVIEW_FAILSAFE_MS = 1500;
 const DEFAULT_GRID = 20;
+/** Most per-element selection outlines drawn at once. */
+const MAX_SELECTION_OUTLINES = 500;
 
 const nodeTypes: NodeTypes = { ob: ElementNode };
 const edgeTypes: EdgeTypes = { ob: ElementEdge };
@@ -182,6 +188,33 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
           void rf.setViewport({ x: next.x, y: next.y, zoom: next.zoom });
           applyViewport(next);
         }
+      }),
+    [rf, applyViewport],
+  );
+
+  // Zoom buttons: zoom about the center of the canvas, clamped to the zoom range.
+  const zoomTo = useCallback(
+    (zoom: number) => {
+      const cur = vpRef.current;
+      const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
+      const { width, height } = viewState.current.size;
+      const cx = width / 2;
+      const cy = height / 2;
+      const next = { x: cx - ((cx - cur.x) / cur.zoom) * z, y: cy - ((cy - cur.y) / cur.zoom) * z, zoom: z };
+      void rf.setViewport(next);
+      applyViewport(next);
+    },
+    [rf, applyViewport],
+  );
+  const fitAll = useCallback(() => emitViewCommand('zoomToFit'), []);
+
+  // "Go to master" (component panel): fit the given bounds in view; not a document edit.
+  useEffect(
+    () =>
+      onFocusBounds((b) => {
+        const next = zoomToFit(vpRef.current, [b], viewState.current.size);
+        void rf.setViewport({ x: next.x, y: next.y, zoom: next.zoom });
+        applyViewport(next);
       }),
     [rf, applyViewport],
   );
@@ -349,12 +382,20 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
   );
 
   const onNodeDragStop = useCallback(
-    (_e: unknown, node: ObNode) => {
+    (e: unknown, node: ObNode) => {
       const r = dragDelta(node, true);
       dragRef.current = null;
       setGuides([]);
       if (!r) return;
-      const op = moveOp(doc.elements, r.ids, r.dx, r.dy);
+      // Drop onto a Frame (Req 21.4): the pointer decides the target; fall back to the moved selection's center.
+      const ptr = e as { clientX?: number; clientY?: number } | null;
+      const sel = selectionBounds(doc.elements, r.ids);
+      const point =
+        typeof ptr?.clientX === 'number' && typeof ptr.clientY === 'number'
+          ? toBoard(ptr.clientX, ptr.clientY)
+          : sel && { x: sel.x + r.dx + sel.width / 2, y: sel.y + r.dy + sel.height / 2 };
+      const target = point ? findDropTarget(doc.elements, r.ids, point) : undefined;
+      const op = dropOp(doc.elements, r.ids, r.dx, r.dy, target);
       if (!op) {
         setPreviews(EMPTY_PREVIEWS);
         return;
@@ -362,7 +403,7 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
       holdPreviews(toPreviews(movePatches(doc.elements, r.ids, r.dx, r.dy)));
       emit(op); // exactly one op per drag
     },
-    [dragDelta, doc.elements, emit, holdPreviews],
+    [dragDelta, doc.elements, emit, holdPreviews, toBoard],
   );
 
   // --- connect gestures (Req 8.2, 8.3) --------------------------------------------------------------
@@ -388,14 +429,32 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
   );
 
   // --- selection by click ---------------------------------------------------------------------------
+  const pick = useCallback((shift: boolean, id: string): void => {
+    const cur = selectionRef.current;
+    if (shift) setSelection(cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+    else setSelection([id]);
+  }, []);
   const clickSelect = useCallback(
-    (e: { shiftKey: boolean }, id: string) => {
+    (e: { shiftKey: boolean; clientX?: number; clientY?: number }, id: string) => {
       if (activeTool !== 'select') return;
-      const cur = selectionRef.current;
-      if (e.shiftKey) setSelection(cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
-      else setSelection([id]);
+      // A click on a part of an element clipped away by a clipping Frame falls through (Req 10.3).
+      const target = byId.get(id);
+      if (target && target.parentId !== undefined && e.clientX !== undefined && e.clientY !== undefined) {
+        const pt = toBoard(e.clientX, e.clientY);
+        const items = doc.elements.filter((x) => x.type !== 'edge');
+        if (isClippedAt(target, new Map(items.map((x) => [x.id, x])), pt)) {
+          const next = hitTest(items, pt);
+          if (next === undefined) {
+            if (!e.shiftKey) setSelection([]);
+            return;
+          }
+          pick(e.shiftKey, next);
+          return;
+        }
+      }
+      pick(e.shiftKey, id);
     },
-    [activeTool],
+    [activeTool, byId, doc.elements, toBoard, pick],
   );
 
   // --- pane gestures: marquee and drawing tools --------------------------------------------------
@@ -445,6 +504,17 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
         },
         () => setDraft(null),
       );
+    } else if (tool === 'icon') {
+      const name = uiState.getState().iconName;
+      if (!name) return; // nothing chosen in the picker yet
+      track(
+        () => undefined,
+        (ev) => {
+          const p = toBoard(ev.clientX, ev.clientY);
+          emit(iconCreateOp(name, gridOn ? { x: snapToGrid(p.x, spacing), y: snapToGrid(p.y, spacing) } : p));
+        },
+        () => undefined,
+      );
     } else if (tool === 'freehand' || tool === 'eraser') {
       const sample = (ev: { clientX: number; clientY: number; pointerType?: string; pressure?: number }): StrokePoint => {
         const p = toBoard(ev.clientX, ev.clientY);
@@ -484,6 +554,28 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
       boxes.push(p ? { x: p.x ?? el.x, y: p.y ?? el.y, width: p.width ?? el.width, height: p.height ?? el.height } : el);
     }
     return unionBounds(boxes);
+  }, [selection, byId, previews]);
+
+  // With several elements selected (e.g. by dragging an area), outline each one so the selection is
+  // visible, not just the box around all of them. Capped so huge selections stay fast.
+  const selOutlines = useMemo(() => {
+    if (selection.length < 2) return [];
+    const out: { id: string; x: number; y: number; width: number; height: number; rotation: number }[] = [];
+    for (const id of selection) {
+      if (out.length >= MAX_SELECTION_OUTLINES) break;
+      const el = byId.get(id);
+      if (!el || el.type === 'edge') continue;
+      const p = previews.get(id);
+      out.push({
+        id,
+        x: p?.x ?? el.x,
+        y: p?.y ?? el.y,
+        width: p?.width ?? el.width,
+        height: p?.height ?? el.height,
+        rotation: p?.rotation ?? el.rotation ?? 0,
+      });
+    }
+    return out;
   }, [selection, byId, previews]);
 
   const startResize = (e: ReactPointerEvent, handle: HandleId): void => {
@@ -588,6 +680,20 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
         {draft && <DraftShape draft={draft} vp={vp} />}
       </svg>
 
+      {activeTool === 'select' && selOutlines.map((o) => (
+        <div
+          key={o.id}
+          className="ob-selection-outline"
+          data-testid="selection-outline"
+          style={{
+            left: boardToScreen(vp, o).x,
+            top: boardToScreen(vp, o).y,
+            width: o.width * vp.zoom,
+            height: o.height * vp.zoom,
+            ...(o.rotation ? { transform: `rotate(${o.rotation}deg)` } : {}),
+          }}
+        />
+      ))}
       {activeTool === 'select' && selBounds && (
         <SelectionBox bounds={selBounds} vp={vp} onResize={startResize} onRotate={startRotate} />
       )}
@@ -595,9 +701,41 @@ function CanvasInner({ doc, gridSpacing, readOnly }: InnerProps) {
       <EditingLayer doc={doc} vp={vp} readOnly={readOnly} selection={selection} containerRef={containerRef} toBoard={toBoard} />
 
       {showMinimap && <Minimap doc={doc} vp={vp} size={size} onNavigate={(v) => { void rf.setViewport(v); applyViewport({ ...v }); }} />}
-      <div className="ob-zoom" role="status" aria-label="Zoom level">
-        {formatZoomPercent(vp.zoom)}
-      </div>
+      <ZoomControls zoom={vp.zoom} besideMinimap={showMinimap} onZoom={zoomTo} onFit={fitAll} />
+    </div>
+  );
+}
+
+/** Each zoom button step multiplies or divides the zoom by this factor. */
+export const ZOOM_STEP = 1.25;
+
+/** Zoom out, current level (resets to 100%), zoom in, and fit-all, beside the minimap. */
+function ZoomControls({
+  zoom,
+  besideMinimap,
+  onZoom,
+  onFit,
+}: {
+  zoom: number;
+  besideMinimap: boolean;
+  onZoom(zoom: number): void;
+  onFit(): void;
+}) {
+  const pct = formatZoomPercent(zoom);
+  return (
+    <div className={`ob-zoom${besideMinimap ? ' ob-zoom-beside-minimap' : ''}`} role="group" aria-label={t('Zoom')}>
+      <button type="button" aria-label={t('Zoom out')} title={t('Zoom out')} disabled={zoom <= MIN_ZOOM} onClick={() => onZoom(zoom / ZOOM_STEP)}>
+        <Icon name="zoomOut" size={16} />
+      </button>
+      <button type="button" className="ob-zoom-level" aria-label={t('Zoom {0}, reset to 100%', pct)} title={t('Reset to 100%')} onClick={() => onZoom(1)}>
+        {pct}
+      </button>
+      <button type="button" aria-label={t('Zoom in')} title={t('Zoom in')} disabled={zoom >= MAX_ZOOM} onClick={() => onZoom(zoom * ZOOM_STEP)}>
+        <Icon name="zoomIn" size={16} />
+      </button>
+      <button type="button" aria-label={t('Zoom to fit')} title={t('Zoom to fit')} onClick={onFit}>
+        <Icon name="fit" size={16} />
+      </button>
     </div>
   );
 }
@@ -652,6 +790,9 @@ function SelectionBox({ bounds, vp, onResize, onRotate }: SelectionBoxProps) {
         <div key={h} className={`ob-resize-handle ob-h-${h}`} data-handle={h} onPointerDown={(e) => onResize(e, h)} />
       ))}
       <div className="ob-rotate-handle" data-handle="rotate" onPointerDown={onRotate} />
+      <div className="ob-selection-size" aria-hidden="true">
+        {Math.round(bounds.width)} × {Math.round(bounds.height)}
+      </div>
     </div>
   );
 }

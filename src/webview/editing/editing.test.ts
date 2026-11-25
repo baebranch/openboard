@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { TextElement } from '../../core/model/types';
 import { MAX_IMAGE_BYTES } from '../../core/image';
 import { beginEdit, createTextOp, editTargetForDoubleClick, endEdit, styleForShortcut, toggleStyle } from './editSession';
+import { measure } from '../../core/text';
+import { softBreakOffsets, textPadding } from './caret';
 import { altTextOp, classifyPasteText, clampCrop, planImageImports, planReplaceSource } from './media';
 
 const text = (runs: TextElement['runs']): TextElement => ({
@@ -104,5 +106,28 @@ describe('image batches', () => {
     expect(clampCrop({ x: 100, y: 0, w: 5, h: 5 }, { width: 100, height: 50 })).toBeUndefined();
     expect(altTextOp('i', 'a'.repeat(500))).toBeDefined();
     expect(altTextOp('i', 'a'.repeat(501))).toBeUndefined();
+  });
+});
+
+describe('wrapped editing overlay line model', () => {
+  const spec = { fontFamily: 'sans-serif', fontSize: 16, width: 60 };
+  // Slicing the text at the soft breaks and trimming whitespace yields exactly the measured lines.
+  const sliced = (t: string, offs: number[]): string[] =>
+    [0, ...offs].map((o, i) => t.slice(o, offs[i] ?? t.length).replace(/\s+/g, ' ').trim());
+  it('breaks at the same positions as measure()', () => {
+    for (const t of ['hello brave new world', 'a  b   c dddddddddddddddd e', 'x'.repeat(30)]) {
+      const m = measure({ text: t, fontFamily: spec.fontFamily, fontSize: 16, availableWidth: 60 });
+      expect(m.ok).toBe(true);
+      if (!m.ok) return;
+      expect(sliced(t, softBreakOffsets(t, spec))).toEqual(m.value.lines);
+    }
+  });
+  it('restarts per explicit newline', () => {
+    expect(softBreakOffsets('ab\ncd', spec)).toEqual([]);
+    const t = 'ab\nhello brave new world';
+    expect(softBreakOffsets(t, spec).every((o) => o > 3)).toBe(true);
+  });
+  it('uses the Renderer text padding per element type', () => {
+    expect([textPadding('text'), textPadding('sticky'), textPadding('flowNode')]).toEqual([0, 8, 4]);
   });
 });

@@ -19,6 +19,9 @@ import { registerElementTools } from '../../src/core/tools/element-tools';
 import { registerExportTools, type ExportHost } from '../../src/core/tools/export-tools';
 import { registerImportTools } from '../../src/core/tools/import-tools';
 import { registerLayoutTools } from '../../src/core/tools/layout-tools';
+import { registerTokenTools } from '../../src/core/tools/token-tools';
+import { registerComponentTools } from '../../src/core/tools/component-tools';
+import { registerIconTools } from '../../src/core/tools/icon-tools';
 
 /** In-memory board lifecycle host. */
 export class FakeLifecycleHost implements BoardLifecycleHost {
@@ -139,6 +142,9 @@ export function buildFullRegistry(options: FullRegistryOptions = {}): FullRegist
   registerArrangeTools(collector);
   registerConnectTools(collector);
   registerLayoutTools(collector);
+  registerTokenTools(collector);
+  registerComponentTools(collector);
+  registerIconTools(collector);
   registerImportTools(collector);
   registerExportTools(collector, host);
   registerBoardTools(collector, options.lifecycleHost ?? new FakeLifecycleHost());

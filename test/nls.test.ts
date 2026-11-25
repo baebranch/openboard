@@ -9,12 +9,12 @@ const pkgRaw = readFileSync(join(root, 'package.json'), 'utf8');
 const nls = JSON.parse(readFileSync(join(root, 'package.nls.json'), 'utf8')) as Record<string, string>;
 const bundle = JSON.parse(readFileSync(join(root, 'l10n/bundle.l10n.json'), 'utf8')) as Record<string, string>;
 
-function hostSources(dir: string): string[] {
+function hostSources(dir: string, tsx = false): string[] {
   const out: string[] = [];
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) out.push(...hostSources(p));
-    else if (p.endsWith('.ts') && !p.endsWith('.test.ts')) out.push(p);
+    if (statSync(p).isDirectory()) out.push(...hostSources(p, tsx));
+    else if ((p.endsWith('.ts') || (tsx && p.endsWith('.tsx'))) && !/\.test\.tsx?$/.test(p) && !p.endsWith('.d.ts')) out.push(p);
   }
   return out;
 }
@@ -42,6 +42,34 @@ describe('localization', () => {
     }
     expect(found.length).toBeGreaterThan(0);
     for (const s of found) expect(bundle[s], s).toBeDefined();
+  });
+
+  it('every literal t(...) key in src/webview is in the l10n bundle', () => {
+    const found = new Set<string>();
+    for (const file of hostSources(join(root, 'src/webview'), true)) {
+      const text = readFileSync(file, 'utf8');
+      for (const m of text.matchAll(/(?<![\w.$])t\(\s*(['"])((?:\\.|(?!\1)[^\\\n])*)\1/g)) {
+        found.add((m[2] as string).replace(/\\(['"\\])/g, '$1'));
+      }
+    }
+    expect(found.size).toBeGreaterThan(0);
+    const missing = [...found].filter((k) => bundle[k] === undefined);
+    expect(missing).toEqual([]);
+  });
+
+  it('new mockup controls have no hard-coded user-visible JSX text or label attributes', () => {
+    const files = [
+      'src/webview/panel/ComponentPanel.tsx',
+      'src/webview/palette/IconPicker.tsx',
+      'src/webview/properties/LayoutControls.tsx',
+    ];
+    for (const f of files) {
+      const text = readFileSync(join(root, f), 'utf8');
+      const attrs = [...text.matchAll(/\s(?:aria-label|aria-description|title|placeholder|alt)="([^"{]*[A-Za-z][^"]*)"/g)].map((m) => m[1]);
+      expect(attrs, `${f} literal attributes`).toEqual([]);
+      const jsxText = [...text.matchAll(/>\s*([A-Za-z][^<>{}=;&]*[A-Za-z.])\s*</g)].map((m) => m[1]);
+      expect(jsxText, `${f} literal JSX text`).toEqual([]);
+    }
   });
 
   it('dynamic user-facing host strings are in the l10n bundle', () => {

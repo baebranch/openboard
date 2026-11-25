@@ -49,6 +49,15 @@ function lazyValidators(extensionUri: vscode.Uri): LoadedValidators {
   };
 }
 
+/** Save dialog for a webview-started export, defaulting to "<board name>.<ext>" next to the board. */
+async function promptExportDestination(board: vscode.Uri, format: string): Promise<vscode.Uri | undefined> {
+  const ext = format === 'jpeg' ? 'jpg' : format;
+  return vscode.window.showSaveDialog({
+    filters: { [format.toUpperCase()]: [ext] },
+    defaultUri: board.with({ path: board.path.replace(/\.openboard$/, '') + `.${ext}` }),
+  });
+}
+
 export function activate(context: vscode.ExtensionContext): OpenBoardApi {
   const output = vscode.window.createOutputChannel('OpenBoard');
   const logger = {
@@ -107,7 +116,16 @@ export function activate(context: vscode.ExtensionContext): OpenBoardApi {
         if (!model) return;
         const extra = typeof msg.input === 'object' && msg.input !== null ? (msg.input as Record<string, unknown>) : {};
         void doc.hub
-          .runGestureAsync(session, msg.gestureId, () => registry.invoke(msg.tool, { ...extra, board: model.path }))
+          .runGestureAsync(session, msg.gestureId, async () => {
+            // An export started in the webview (Export dialog, slides Export PDF) has no destination
+            // yet: ask for one here. Cancelling the dialog exports nothing.
+            if (msg.tool === 'openboard.export' && extra['path'] === undefined) {
+              const dest = await promptExportDestination(doc.uri, typeof extra['format'] === 'string' ? extra['format'] : 'png');
+              if (!dest) return { results: [] };
+              return registry.invoke(msg.tool, { ...extra, board: model.path, path: dest.toString() });
+            }
+            return registry.invoke(msg.tool, { ...extra, board: model.path });
+          })
           .then((result) => {
             const err = (result as { error?: { code?: string; message?: string } } | null)?.error;
             if (err) session.post({ type: 'notice', level: 'warn', message: err.message ?? err.code ?? 'Operation failed' });

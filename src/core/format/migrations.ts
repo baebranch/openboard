@@ -52,8 +52,13 @@ export class MigrationRegistry {
   }
 }
 
-/** Built-in migrations. Empty while the current schema version is 1. */
-export const MIGRATIONS: readonly Migration[] = [];
+/**
+ * Built-in migrations.
+ * v1 -> v2 is an identity migration (Req 3.5): every Schema_V2_Feature field is optional,
+ * so nothing needs defaults and no existing property changes. The serializer writes
+ * version 1 again when the document has no Schema_V2_Feature.
+ */
+export const MIGRATIONS: readonly Migration[] = [{ from: 1, migrate: (doc) => doc }];
 
 export const defaultMigrationRegistry = new MigrationRegistry(MIGRATIONS);
 

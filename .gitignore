@@ -6,6 +6,7 @@ out-int/
 .vscode-test/
 
 # Local debug/verification logs
+error.txt
 *.log
 ob_log1.txt
 

@@ -18,11 +18,14 @@ export type ToolId =
   | 'image'
   | 'frame'
   | 'sticky'
-  | 'eraser';
+  | 'eraser'
+  | 'icon';
 
 export interface UiState {
   activeTool: ToolId;
   selection: readonly ElementId[];
+  /** Icon chosen in the icon picker; the Icon tool places this name on click (Req 23.3). */
+  iconName: string | undefined;
 }
 
 const EMPTY: readonly ElementId[] = Object.freeze([]) as readonly ElementId[];
@@ -32,7 +35,7 @@ function sameIds(a: readonly ElementId[], b: readonly ElementId[]): boolean {
 }
 
 export class UiStateStore {
-  private state: UiState = { activeTool: 'select', selection: EMPTY };
+  private state: UiState = { activeTool: 'select', selection: EMPTY, iconName: undefined };
   private listeners = new Set<() => void>();
 
   subscribe = (l: () => void): (() => void) => {
@@ -49,6 +52,10 @@ export class UiStateStore {
 
   setActiveTool = (tool: ToolId): void => {
     if (tool !== this.state.activeTool) this.set({ activeTool: tool });
+  };
+
+  setIconName = (name: string | undefined): void => {
+    if (name !== this.state.iconName) this.set({ iconName: name });
   };
 
   private cancelListeners = new Set<() => void>();

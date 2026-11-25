@@ -56,6 +56,21 @@ export const GUEST_PRELUDE = `(function () {
       importMermaid: function (text, opts) { return call('importMermaid', [path, text, opts]); },
       library: function () { return call('library', [path]); },
       insertComponent: function (c, opts) { return call('insertComponent', [path, c, opts]); },
+      tokens: function (opts) { return call('tokens', [path, opts]); },
+      createToken: function (input) { return call('createToken', [path, input]); },
+      updateToken: function (input) { return call('updateToken', [path, input]); },
+      renameToken: function (input) { return call('renameToken', [path, input]); },
+      deleteToken: function (input) { return call('deleteToken', [path, input]); },
+      detachTokens: function (opts) { return call('detachTokens', [path, opts]); },
+      tokenMode: function (mode) { return call('tokenMode', [path, mode]); },
+      components: function () { return call('components', [path]); },
+      createComponent: function (input) { return call('createComponent', [path, input]); },
+      removeComponent: function (id) { return call('removeComponent', [path, id]); },
+      createInstance: function (input) { return call('createInstance', [path, input]); },
+      setOverride: function (input) { return call('setOverride', [path, input]); },
+      resetOverride: function (input) { return call('resetOverride', [path, input]); },
+      detachInstance: function (id) { return call('detachInstance', [path, id]); },
+      searchIcons: function (keyword) { return call('searchIcons', [path, keyword]); },
       viewport: function (opts) { return call('viewport', [path, opts]); },
       export: function (opts) { return call('export', [path, opts]); },
       save: function () { return call('save', [path]); },
@@ -180,6 +195,33 @@ export function createDispatcher(options: DispatcherOptions): (method: string, a
       if (typeof c !== 'string') throw new ObError('invalid_input', 'insertComponent(idOrName): must be a string');
       return run('library.insert', { ...on(p), ...optObj(opts, 'opts'), component: c });
     },
+    tokens: ([p, o]) => run('token.list', { ...on(p), ...optObj(o, 'opts') }),
+    createToken: ([p, i]) => run('token.create', { ...on(p), ...optObj(i, 'input') }),
+    updateToken: ([p, i]) => run('token.update', { ...on(p), ...optObj(i, 'input') }),
+    renameToken: ([p, i]) => run('token.rename', { ...on(p), ...optObj(i, 'input') }),
+    deleteToken: ([p, i]) => run('token.delete', { ...on(p), ...optObj(i, 'input') }),
+    detachTokens: ([p, o]) => run('token.detach', { ...on(p), ...optObj(o, 'opts') }),
+    tokenMode([p, mode]) {
+      if (typeof mode !== 'string') throw new ObError('invalid_input', 'tokenMode(mode): mode must be "light", "dark" or "auto"');
+      return run('token.mode', { ...on(p), mode });
+    },
+    components: ([p]) => run('component.list', on(p)),
+    createComponent: ([p, i]) => run('component.create', { ...on(p), ...optObj(i, 'input') }),
+    removeComponent([p, id]) {
+      if (typeof id !== 'string') throw new ObError('invalid_input', 'removeComponent(id): id must be a string');
+      return run('component.remove', { ...on(p), id });
+    },
+    createInstance: ([p, i]) => run('component.instance.create', { ...on(p), ...optObj(i, 'input') }),
+    setOverride: ([p, i]) => run('component.instance.override.set', { ...on(p), ...optObj(i, 'input') }),
+    resetOverride: ([p, i]) => run('component.instance.override.reset', { ...on(p), ...optObj(i, 'input') }),
+    detachInstance([p, id]) {
+      if (typeof id !== 'string') throw new ObError('invalid_input', 'detachInstance(id): id must be a string');
+      return run('component.instance.detach', { ...on(p), id });
+    },
+    searchIcons([p, keyword]) {
+      if (typeof keyword !== 'string') throw new ObError('invalid_input', 'searchIcons(keyword): keyword must be a string');
+      return run('icon.search', { ...on(p), keyword });
+    },
     viewport: ([p, opts]) => run('viewport', { ...on(p), ...optObj(opts, 'opts') }),
     export: ([p, opts]) => run('export', { ...on(p), ...optObj(opts, 'opts') }),
     save: ([p]) => run('board.save', on(p)),
@@ -255,9 +297,27 @@ interface BoardHandle {
   library(): Promise<Record<string, unknown>>;
   /** Inserts a library component by id or name. opts: { x?: number; y?: number }. */
   insertComponent(idOrName: string, opts?: { x?: number; y?: number }): Promise<Record<string, unknown>>;
+  /** Design tokens (category: colors | fonts | numbers). Same inputs/results as the token.* actions. */
+  tokens(opts?: { category?: string }): Promise<{ tokens: unknown[] }>;
+  createToken(input: { category: string; name: string; value: unknown }): Promise<Record<string, unknown>>;
+  updateToken(input: { category: string; name: string; value: unknown }): Promise<Record<string, unknown>>;
+  renameToken(input: { category: string; name: string; newName: string }): Promise<Record<string, unknown>>;
+  deleteToken(input: { category: string; name: string }): Promise<Record<string, unknown>>;
+  detachTokens(opts?: { ids?: string[]; category?: string; name?: string }): Promise<{ ids: string[] }>;
+  tokenMode(mode: "light" | "dark" | "auto"): Promise<{ mode: string }>;
+  /** Components: masters, instances, overrides (component.* actions). Move into/out of Frames: arrange("moveIntoFrame", { ids, targetId }) / arrange("moveOutOfFrame", { ids }). */
+  components(): Promise<{ components: unknown[] }>;
+  createComponent(input: { ids: string[]; name: string }): Promise<{ id: string; name: string; wrapped: boolean }>;
+  removeComponent(id: string): Promise<Record<string, unknown>>;
+  createInstance(input: { master: string; x?: number; y?: number; parentId?: string }): Promise<{ id: string; master: string; x: number; y: number }>;
+  setOverride(input: { id: string; childId?: string; property: string; value: unknown }): Promise<{ id: string; key: string; property: string }>;
+  resetOverride(input: { id: string; childId?: string; property?: string }): Promise<{ id: string; removed: number }>;
+  detachInstance(id: string): Promise<{ id: string; children: number }>;
+  /** Icon names matching a keyword (up to 50). */
+  searchIcons(keyword: string): Promise<{ names: string[] }>;
   /** opts: { action: "set" | "pan" | "zoomToFit" | "zoomToSelection"; x?, y?, zoom?, dx?, dy? }. */
   viewport(opts: Record<string, unknown>): Promise<Record<string, unknown>>;
-  /** opts: { format?, scope?, ids?, frameId?, scale?, padding?, background?, path? }; without \`path\` base64 data is returned. */
+  /** opts: { format?, scope?: "board" | "selection" | "frame" | "allFrames" | "frames", ids?, frameId?, frameIds?, scale?, padding?, background?, matchTheme?, tokenMode?, embedBoard?, excludeMasters?, path? }; \`frames\` + pdf writes one multi-page PDF of the slides. Without \`path\` base64 data is returned. */
   export(opts?: Record<string, unknown>): Promise<Record<string, unknown>>;
   /** Saves to disk. Pending edits of this script are committed first (they become their own undo step). */
   save(): Promise<{ path: string; saved: boolean }>;

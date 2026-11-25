@@ -200,6 +200,8 @@ export interface RouterDeps {
   handlers?: RouterHandlers;
   /** When given, liveness and unacknowledged-gesture reporting are wired through it. */
   hub?: SessionHub;
+  /** Installed font families for the font picker; without it `fonts:request` gets an empty list. */
+  listFonts?: () => Promise<string[]>;
 }
 
 /** Builds `init` for a session: document, settings, read-only flag. */
@@ -256,5 +258,13 @@ export function routeMessage(deps: RouterDeps, session: Session, raw: unknown): 
       if (msg.level === 'warn') deps.logger.warn(msg.message);
       else deps.logger.info?.(msg.message);
       return;
+    case 'fonts:request': {
+      const list = deps.listFonts ? deps.listFonts() : Promise.resolve([]);
+      void list.then(
+        (families) => session.post({ type: 'fonts', families }),
+        () => session.post({ type: 'fonts', families: [] }),
+      );
+      return;
+    }
   }
 }

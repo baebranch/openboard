@@ -26,6 +26,44 @@ describe('openboard.batch', () => {
     expect(history.canUndo()).toBe(false);
   });
 
+  it('reports derived geometry once and does not leak stale ids into later batches', async () => {
+    const { run, model, registry } = setup();
+    registry.register({
+      name: 'test.instantiate',
+      description: 'creates a component master and an instance',
+      inputSchema: { type: 'object' },
+      outputSchema: { type: 'object' },
+      boardResolution: 'required-or-active',
+      handler: (ctx) => {
+        const base = { rotation: 0, width: 100, height: 100 };
+        ctx.tx!.create({ id: 'M', type: 'frame', x: 0, y: 0, component: 'Card', ...base } as never);
+        ctx.tx!.create({ id: 'c0', type: 'rectangle', x: 0, y: 0, parentId: 'M', ...base } as never);
+        ctx.tx!.create({ id: 'I', type: 'frame', x: 300, y: 0, instanceOf: 'M', ...base } as never);
+        return { ok: true };
+      },
+    });
+    // Stale ids from a transaction outside the registry.
+    model.transact('direct', (tx) => {
+      tx.create({ id: 'M0', type: 'frame', x: 0, y: 0, width: 10, height: 10, rotation: 0, component: 'C0' } as never);
+      tx.create({ id: 'I0', type: 'frame', x: 50, y: 0, width: 10, height: 10, rotation: 0, instanceOf: 'M0' } as never);
+    });
+    const plain = await run('openboard.batch', { operations: [create('p')] });
+    expect(plain.ok).toBe(true);
+    expect(plain.geometryChanges).toBeUndefined();
+
+    const r = await run('openboard.batch', {
+      operations: [{ tool: 'test.instantiate' }],
+    });
+    expect(r.ok).toBe(true);
+    expect(r.geometryChanges.ids).toEqual([...r.geometryChanges.ids].sort());
+    expect(r.geometryChanges.count).toBe(r.geometryChanges.ids.length);
+    expect(r.geometryChanges.truncated).toBe(false);
+    r.results.forEach((res: any) => expect(res.geometryChanges).toBeUndefined());
+
+    const after = await run('openboard.batch', { operations: [create('q')] });
+    expect(after.geometryChanges).toBeUndefined();
+  });
+
   it('rolls back everything and reports index and reason on failure', async () => {
     const { run, ids, history } = setup();
     const r = await run('openboard.batch', {

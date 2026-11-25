@@ -1,3 +1,3 @@
-export { ThemeAdapter, getThemeAdapter, getDefaultFontFamily } from './ThemeAdapter';
+export { ThemeAdapter, getThemeAdapter, getDefaultFontFamily, getDefaultTextColor } from './ThemeAdapter';
 export { useThemePalette } from './useThemePalette';
 export * from './themeCss';

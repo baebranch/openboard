@@ -1,0 +1,3138 @@
+{
+  "pbtResults": {
+    "1.6 Write property test for render cache key completeness": {
+      "status": "passed",
+      "lastRunTimestamp": 1795516382638
+    },
+    "3.7 Write property test for invalid corner radius rejection": {
+      "status": "passed",
+      "lastRunTimestamp": 1795516627950
+    },
+    "3.6 Write property test for corner radius clamp and independence": {
+      "status": "passed",
+      "lastRunTimestamp": 1795517124230
+    },
+    "5.7 Write property test for Text_Measurer round trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1795517203180
+    },
+    "4.6 Write property test for text weight resolution": {
+      "status": "passed",
+      "lastRunTimestamp": 1795517675432
+    },
+    "4.7 Write property test for text color and stroke independence": {
+      "status": "passed",
+      "lastRunTimestamp": 1795517681534
+    },
+    "6.6 Write property test for image fill fit geometry": {
+      "status": "passed",
+      "lastRunTimestamp": 1795518632958
+    },
+    "6.7 Write property test for asset deduplication": {
+      "status": "passed",
+      "lastRunTimestamp": 1795518697339
+    },
+    "7.7 Write property test for nested clip intersection": {
+      "status": "passed",
+      "lastRunTimestamp": 1795519253879
+    },
+    "9.12 Write property test for token update isolation": {
+      "status": "passed",
+      "lastRunTimestamp": 1795529434997
+    },
+    "11.9 Write property test for Sync_Pass idempotence": {
+      "status": "passed",
+      "lastRunTimestamp": 1795531311433
+    },
+    "11.10 Write property test for Derived_Geometry_Pass termination": {
+      "status": "passed",
+      "lastRunTimestamp": 1795531760571
+    },
+    "11.11 Write property test for one undo entry and pass idempotence": {
+      "status": "passed",
+      "lastRunTimestamp": 1795540244179
+    },
+    "12.4 Write property test for component name de-duplication": {
+      "status": "passed",
+      "lastRunTimestamp": 1795562475951
+    },
+    "15.6 Write property test for the Frame move cascade": {
+      "status": "passed",
+      "lastRunTimestamp": 1795564931517
+    },
+    "15.7 Write property test for nested-frame edit rejection": {
+      "status": "passed",
+      "lastRunTimestamp": 1795565293597
+    },
+    "16.6 Write property test for sizing resolution": {
+      "status": "passed",
+      "lastRunTimestamp": 1795566479776
+    },
+    "16.7 Write property test for layout idempotence and determinism": {
+      "status": "passed",
+      "lastRunTimestamp": 1795566502135
+    },
+    "16.8 Write property test for fixed-children containment": {
+      "status": "passed",
+      "lastRunTimestamp": 1795566505388
+    },
+    "23.8 Write property test for cross-surface edit equivalence": {
+      "status": "passed",
+      "lastRunTimestamp": 1795585436788
+    },
+    "27.3 Write property test for serializer stability": {
+      "status": "passed",
+      "lastRunTimestamp": 1795586275987
+    },
+    "27.5 Write property test for unknown nested properties": {
+      "status": "passed",
+      "lastRunTimestamp": 1795586321849
+    },
+    "27.4 Write property test for the lowest representable schema version": {
+      "status": "passed",
+      "lastRunTimestamp": 1795586373508
+    }
+  },
+  "executionHistory": {
+    "1.1 Capture the non-regression guard fixtures before any behavior changes": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515090431
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515127483
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515805824
+      }
+    ],
+    "1.2 Create the Field Registry and wire it into the known-key lists": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515090588
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515127786
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515805420
+      }
+    ],
+    "1.3 Add the registry lockstep test": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515090724
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515815371
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515969009
+      }
+    ],
+    "1.4 Add the schema-version module and make the serializer write the lowest representable version": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515090861
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515127948
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515806086
+      }
+    ],
+    "1.5 Add render cache key plumbing": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515090984
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515128281
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515806461
+      },
+      {
+        "executionId": "78f7fb48-35ee-4635-9acb-27ea6471eca5",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516340535
+      },
+      {
+        "executionId": "78f7fb48-35ee-4635-9acb-27ea6471eca5",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516439303
+      }
+    ],
+    "1.6 Write property test for render cache key completeness": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515091169
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515815737
+      },
+      {
+        "executionId": "78f7fb48-35ee-4635-9acb-27ea6471eca5",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516532121
+      }
+    ],
+    "1.7 Add the webview `t()` string shim": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515091308
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515128655
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515806679
+      },
+      {
+        "executionId": "78f7fb48-35ee-4635-9acb-27ea6471eca5",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516439589
+      },
+      {
+        "executionId": "78f7fb48-35ee-4635-9acb-27ea6471eca5",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516531649
+      }
+    ],
+    "1.8 Write unit tests for schema-version selection and serializer output": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515091470
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515815923
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515969217
+      }
+    ],
+    "2. Checkpoint - Foundation green": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515091633
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589131151
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589672374
+      }
+    ],
+    "3.1 Add `cornerRadii` to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515091787
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515816135
+      },
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515969396
+      }
+    ],
+    "3.2 Render per-corner radii": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515091961
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516567947
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516871223
+      }
+    ],
+    "3.3 Clamp radii in the webview resize gesture": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515092087
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516568260
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516870860
+      }
+    ],
+    "3.4 Add the corner fields to the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515092216
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516568121
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516871415
+      }
+    ],
+    "3.5 Document `cornerRadii` in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515092330
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517001359
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517136558
+      }
+    ],
+    "3.6 Write property test for corner radius clamp and independence": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515092477
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517001139
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517501416
+      }
+    ],
+    "3.7 Write property test for invalid corner radius rejection": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515092613
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516568541
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516957925
+      }
+    ],
+    "3.8 Write unit tests for corner path output and backward compatibility": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515092757
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517001495
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517137018
+      }
+    ],
+    "4.1 Add `fontWeight` and `textColor` to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515092892
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516568951
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516871582
+      }
+    ],
+    "4.2 Render weight and text color": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515093050
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517001725
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517137709
+      }
+    ],
+    "4.3 Add the theme default text color and theme-change remap": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515093195
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517144904
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517500400
+      }
+    ],
+    "4.4 Add weight and text color controls to the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515093381
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517145332
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517500848
+      }
+    ],
+    "4.5 Document `fontWeight` and `textColor` in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515093513
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517603007
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517796374
+      }
+    ],
+    "4.6 Write property test for text weight resolution": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515093702
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517603359
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517796175
+      }
+    ],
+    "4.7 Write property test for text color and stroke independence": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515093842
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517603201
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517796562
+      }
+    ],
+    "4.8 Write unit tests for theme contrast and remap": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515093987
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517603514
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517797396
+      }
+    ],
+    "5.1 Implement the Text_Measurer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515094112
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516880269
+      },
+      {
+        "executionId": "9882c20c-2ec6-411d-b401-e27037e8414e",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516958515
+      }
+    ],
+    "5.2 Add `textWrap` to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515094245
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517002023
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517137385
+      }
+    ],
+    "5.3 Render wrapped text": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515094426
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517603708
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517797925
+      }
+    ],
+    "5.4 Align the editing overlay with the Renderer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515094614
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517801390
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518317310
+      }
+    ],
+    "5.5 Add the text wrap control to the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515094733
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517801889
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518317577
+      }
+    ],
+    "5.6 Document `textWrap` and the Text_Measurer in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515094874
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518324653
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518569970
+      }
+    ],
+    "5.7 Write property test for Text_Measurer round trip": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515095134
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517145769
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517501176
+      }
+    ],
+    "5.8 Write property test for width monotonicity": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515095307
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517146140
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517501718
+      }
+    ],
+    "5.9 Write unit tests for the Text_Measurer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515095450
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517508905
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517597247
+      }
+    ],
+    "6.1 Add `imageFill` to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515095582
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517802521
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518317799
+      }
+    ],
+    "6.2 Track asset references from `imageFill` and gate assets in the canvas projection": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515095732
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518325367
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518569664
+      }
+    ],
+    "6.3 Render image fills": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515095882
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518325117
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518570537
+      }
+    ],
+    "6.4 Apply and remove image fills from the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096031
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518325614
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518570849
+      }
+    ],
+    "6.5 Document `imageFill` in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096162
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518576992
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518843525
+      }
+    ],
+    "6.6 Write property test for image fill fit geometry": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096282
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518577239
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518843242
+      }
+    ],
+    "6.7 Write property test for asset deduplication": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096401
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518577523
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518843927
+      }
+    ],
+    "6.8 Write property test for missing image references": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096520
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518577816
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518844154
+      }
+    ],
+    "7.1 Add `clipContent` to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096641
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518325897
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518568535
+      }
+    ],
+    "7.2 Render clipping with nested composition": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096750
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518578098
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518844808
+      }
+    ],
+    "7.3 Ignore pointer hits outside a clipping Frame": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096867
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518849064
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518980803
+      }
+    ],
+    "7.4 Verify nested clip rendering empirically in the rasterizer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515096977
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518986169
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795519187064
+      }
+    ],
+    "7.5 Add the clip content toggle to the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515097138
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518849303
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518981013
+      }
+    ],
+    "7.6 Document `clipContent` in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515097350
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518986299
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795519187673
+      }
+    ],
+    "7.7 Write property test for nested clip intersection": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515097496
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795519188418
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795526920470
+      }
+    ],
+    "7.8 Write unit tests for clip export in every format": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515097646
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795519188742
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795526921099
+      }
+    ],
+    "8. Checkpoint - Phase 1 green": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515097799
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795526940144
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795527435172
+      }
+    ],
+    "9.1 Implement the pure token module": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515097928
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795527435410
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795527578949
+      }
+    ],
+    "9.2 Add tokens to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515098048
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795527583753
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795528104308
+      }
+    ],
+    "9.3 Raise the schema version and register the migration": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515098177
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795528108644
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529244573
+      }
+    ],
+    "9.4 Add the token Tx surface and invariants": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515098297
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795528109166
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529244938
+      }
+    ],
+    "9.5 Implement the token tools": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515098426
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529250185
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529608566
+      }
+    ],
+    "9.6 Resolve tokens in the Renderer and the canvas": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515098553
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795528109621
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529245175
+      }
+    ],
+    "9.7 Carry tokens through the Library": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515098708
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529249892
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529608853
+      }
+    ],
+    "9.8 Add token apply, detach, and missing-token marking to the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515098856
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529616045
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529817410
+      }
+    ],
+    "9.9 Document tokens in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515099002
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529832821
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530585237
+      }
+    ],
+    "9.10 Implement token modes (optional, later)": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515099148
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529833051
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530557118
+      }
+    ],
+    "9.11 Write property test for token uniqueness and collection round trip": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515099321
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529250458
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529609115
+      }
+    ],
+    "9.12 Write property test for token update isolation": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515099467
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529250746
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529609317
+      }
+    ],
+    "9.13 Write property test for token delete and detach invariants": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515099616
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529616285
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529817032
+      }
+    ],
+    "9.14 Write unit tests for token tools": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515099777
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529616615
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795529817621
+      }
+    ],
+    "10. Checkpoint - Phase 2 green": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515099889
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530593511
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530719413
+      }
+    ],
+    "11.1 Add the component data model": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515100028
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530719786
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530933078
+      }
+    ],
+    "11.2 Implement the pure Sync_Pass": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515100180
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530938884
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531214650
+      }
+    ],
+    "11.3 Add the Derived_Geometry_Pass module": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515100347
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531219884
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531429488
+      }
+    ],
+    "11.4 Hook the pass into `BoardModel.transact`": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515100497
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531434596
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531689541
+      }
+    ],
+    "11.5 Report derived geometry changes from the registry": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515100654
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531693333
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540526322
+      }
+    ],
+    "11.6 Guard Instance_Children and capture overrides in `Draft`": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515100805
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531694118
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540259482
+      }
+    ],
+    "11.7 Sync on load without spurious modification": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515100974
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540264198
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540410691
+      }
+    ],
+    "11.8 Write property test for Sync_Pass model-based correctness": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515101214
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531221607
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531428932
+      }
+    ],
+    "11.9 Write property test for Sync_Pass idempotence": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515101410
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531222893
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531429262
+      }
+    ],
+    "11.10 Write property test for Derived_Geometry_Pass termination": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515101579
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531694605
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540259359
+      }
+    ],
+    "11.11 Write property test for one undo entry and pass idempotence": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515101714
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531695149
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540259741
+      }
+    ],
+    "11.12 Write property test for undo and redo exactness around the pass": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515101864
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795531695770
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540260240
+      }
+    ],
+    "12.1 Implement component create, remove, and list": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515102018
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540531409
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562391424
+      }
+    ],
+    "12.2 Implement the instance tools": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515102174
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562400830
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562980329
+      }
+    ],
+    "12.3 Remap components on copy, paste, duplicate, and delete": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515102335
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562401063
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562980514
+      }
+    ],
+    "12.4 Write property test for component name de-duplication": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515102520
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562401142
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562980777
+      }
+    ],
+    "12.5 Write unit tests for component tools": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515102662
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562985129
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563237195
+      }
+    ],
+    "13.1 Integrate components with the Library": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515102793
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795562985536
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563236897
+      }
+    ],
+    "13.2 Convert the built-in UI kit to masters": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515102922
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563244619
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563618666
+      }
+    ],
+    "13.3 Add component controls and canvas indicators": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515103058
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563244857
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563618420
+      }
+    ],
+    "13.4 Add component commands and context menu entries": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515103200
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563245042
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563618828
+      }
+    ],
+    "13.5 Add the component panel and its palette control": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515103348
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563245330
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563618992
+      }
+    ],
+    "13.6 Add the \"Exclude component masters\" export option (optional)": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515103495
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563245499
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563619253
+      }
+    ],
+    "13.7 Document components, tokens, and the Library in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515103671
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563623441
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563873668
+      }
+    ],
+    "13.8 Write unit tests for Library integration": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515103820
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563623950
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563874094
+      }
+    ],
+    "13.9 Extend the built-in kit with checkbox, toggle, avatar, and badge (optional, later)": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515103971
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563624522
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563874268
+      }
+    ],
+    "14. Checkpoint - Phase 3 green": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515104167
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563883697
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564451665
+      }
+    ],
+    "15.1 Add nesting guards": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515104483
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564451981
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564802859
+      }
+    ],
+    "15.2 Add \"Move into Frame\" and \"Move out of Frame\"": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515104642
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564810080
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565148996
+      }
+    ],
+    "15.3 Drop a selection onto a Frame or Layout_Frame": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515104771
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564810306
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565148714
+      }
+    ],
+    "15.4 Delete a Frame without deleting nested Frames": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515104920
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564810608
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565149205
+      }
+    ],
+    "15.5 Export scopes for nested Frames": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515105056
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564810442
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565149531
+      }
+    ],
+    "15.6 Write property test for the Frame move cascade": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515105210
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795564810706
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565150100
+      }
+    ],
+    "15.7 Write property test for nested-frame edit rejection": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515105355
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565155176
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565304949
+      }
+    ],
+    "15.8 Write unit tests for nesting behavior": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515105526
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565309264
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565832240
+      }
+    ],
+    "15.9 Document nested Frames in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515105733
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565309752
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565832913
+      }
+    ],
+    "16.1 Add layout and sizing to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515105878
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565310390
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565833704
+      }
+    ],
+    "16.2 Implement `arrangeStack`": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515106028
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565839191
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566118548
+      }
+    ],
+    "16.3 Implement `runLayoutPass`": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515106188
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566125371
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566407915
+      }
+    ],
+    "16.4 Register the Layout_Pass in the Derived_Geometry_Pass": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515106341
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566413093
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566971178
+      }
+    ],
+    "16.5 Write property test for the layout placement algebra": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515106504
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566126384
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566407621
+      }
+    ],
+    "16.6 Write property test for sizing resolution": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515106691
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566413853
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566971695
+      }
+    ],
+    "16.7 Write property test for layout idempotence and determinism": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515106860
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566414572
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566972478
+      }
+    ],
+    "16.8 Write property test for fixed-children containment": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515107015
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566415087
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566973321
+      }
+    ],
+    "16.9 Write unit tests for layout behavior": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515107248
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566981831
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567606870
+      }
+    ],
+    "17.1 Add layout and sizing controls to the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515107475
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565839906
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566118729
+      }
+    ],
+    "17.2 Make resizing a hug axis switch it to fixed": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515107632
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566982267
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567606635
+      }
+    ],
+    "17.3 Reorder children by dragging inside a Layout_Frame": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515107779
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567613930
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567853432
+      }
+    ],
+    "17.4 Give the built-in UI kit Auto Layout": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515107945
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566982967
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567607551
+      }
+    ],
+    "17.5 Add the `ignoreLayout` control (optional, later)": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515108093
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566127032
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795566408421
+      }
+    ],
+    "17.6 Document layout and sizing in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515108237
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567614954
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567853997
+      }
+    ],
+    "17.7 Write DOM tests for the layout and sizing controls": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515108400
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567615695
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567854175
+      }
+    ],
+    "18. Checkpoint - Phase 4 green": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515108567
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567861422
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795568801048
+      }
+    ],
+    "19.1 Generate the curated Lucide subset": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515108731
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795568800818
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569303512
+      }
+    ],
+    "19.2 Package the license and document the icon list": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515108898
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569309570
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569575649
+      }
+    ],
+    "19.3 Enforce the bundle size budget": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515109124
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569310005
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569576322
+      }
+    ],
+    "19.4 Write unit tests for icon search": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515109330
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569310774
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569576961
+      }
+    ],
+    "20.1 Add the `icon` element type to the data layer": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515109481
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569583342
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571193379
+      }
+    ],
+    "20.2 Render icons": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515109634
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571199245
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571551051
+      }
+    ],
+    "20.3 Add the icon search tool": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515109795
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571199804
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571551410
+      }
+    ],
+    "20.4 Add the Icon tool and picker to the palette": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515109969
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571200504
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571551836
+      }
+    ],
+    "20.5 Add the icon name control to the Properties_Panel": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515110132
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571557017
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571955823
+      }
+    ],
+    "20.6 Support icon name overrides in instances": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515110327
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571557478
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571956602
+      }
+    ],
+    "20.7 Document icons in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515110518
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571962965
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572042250
+      }
+    ],
+    "20.8 Write property test for icon name round trip and safe rendering": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515110700
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571558000
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571956794
+      }
+    ],
+    "20.9 Write unit tests for icon behavior": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515110877
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571558658
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795571957174
+      }
+    ],
+    "21.1 Add the three device presets": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515111063
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572055757
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572472036
+      }
+    ],
+    "21.2 Verify User_Children and clipping inside device instances": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515111511
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572479546
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572869416
+      }
+    ],
+    "21.3 Handle preset insertion failure": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515111909
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572480414
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572869669
+      }
+    ],
+    "21.4 Write unit tests for the device presets": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515112089
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572876083
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795573018584
+      }
+    ],
+    "21.5 Document device frames in the skill docs": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515112266
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572876592
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795573019377
+      }
+    ],
+    "22. Checkpoint - Phase 5 green": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515112512
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795573019803
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795573334293
+      }
+    ],
+    "23.1 Add the new query filters": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515112706
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795573334859
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584789895
+      }
+    ],
+    "23.2 List Mockup_Fields in the schema tool": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515112894
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795573335485
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584790621
+      }
+    ],
+    "23.3 Keep the agent surface within budget": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515113081
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584797727
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584975611
+      }
+    ],
+    "23.4 Expose the new actions in the `ob` API": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515113248
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584798203
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584975775
+      }
+    ],
+    "23.5 Regenerate catalogs and action coverage": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515113429
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584980357
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585512044
+      }
+    ],
+    "23.6 Write the hand-authored skill topics": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515113887
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584981167
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585512313
+      }
+    ],
+    "23.7 Write schema validity tests for the new tools": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515114088
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584981965
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585512802
+      }
+    ],
+    "23.8 Write property test for cross-surface edit equivalence": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515114316
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584982543
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585513278
+      }
+    ],
+    "24.1 Replace the `t()` shim with `@vscode/l10n`": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515114508
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585522478
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586162871
+      }
+    ],
+    "24.2 Populate and audit the localization bundle": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515114721
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586688442
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795587747896
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589122864
+      }
+    ],
+    "25.1 Audit and fix the new controls": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515114887
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588001224
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588369271
+      }
+    ],
+    "25.2 Write axe and keyboard DOM tests": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515115320
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588374767
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588876569
+      }
+    ],
+    "26.1 Add the large-board notice and viewport rule for the new element kinds": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515115503
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795584983274
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585514129
+      }
+    ],
+    "26.2 Extend the perf fixtures": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515115661
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588375136
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588877072
+      }
+    ],
+    "26.3 Benchmark the derived passes": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515115843
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588881265
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588996515
+      }
+    ],
+    "26.4 Benchmark open, drag, token resolution, and text": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515116045
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588881881
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588997142
+      }
+    ],
+    "27.1 Build the shared arbitraries": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515116214
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585523041
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586163480
+      }
+    ],
+    "27.2 Write property test for the whole-document round trip": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515116539
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586172229
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586685004
+      }
+    ],
+    "27.3 Write property test for serializer stability": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515116770
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586172010
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586685439
+      }
+    ],
+    "27.4 Write property test for the lowest representable schema version": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515116995
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586172497
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586685641
+      }
+    ],
+    "27.5 Write property test for unknown nested properties": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515117243
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586173159
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586686040
+      }
+    ],
+    "27.6 Write property test for cross-surface validation agreement": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515117580
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586173608
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795587748366
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589123424
+      }
+    ],
+    "27.7 Write export tests for every format": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515117889
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586686531
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795587747292
+      }
+    ],
+    "27.8 Write migration and older-build tests": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515118061
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586687327
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795587747442
+      }
+    ],
+    "27.9 Make property-test failures reportable": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515118251
+      },
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795586687891
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795587747605
+      }
+    ],
+    "27.10 Write the cross-bundle determinism test": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515118443
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588001608
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588368445
+      }
+    ],
+    "27.11 Cover Requirement 28.3 for all three passes": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515118618
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588002160
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588368760
+      }
+    ],
+    "27.12 Extend non-regression coverage": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515118780
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588002771
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588368917
+      }
+    ],
+    "28.1 Update README and CHANGELOG": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515118940
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589001676
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589115229
+      }
+    ],
+    "29. Final checkpoint - Everything green": [
+      {
+        "executionId": "9af095e4-8b03-42e3-97b3-46e6dc53e2cd",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795515119107
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589675094
+      },
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795590258357
+      }
+    ],
+    "1. Cross-cutting foundation": [
+      {
+        "executionId": "78f7fb48-35ee-4635-9acb-27ea6471eca5",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795516532446
+      }
+    ],
+    "3. Phase 1a: Per-corner radius": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517501949
+      }
+    ],
+    "4. Phase 1b: Font weight and text color": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795517797535
+      }
+    ],
+    "5. Phase 1c: Text_Measurer and text wrapping": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518571335
+      }
+    ],
+    "6. Phase 1d: Image fill": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795518844389
+      }
+    ],
+    "7. Phase 1e: Frame clipping": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795526921308
+      }
+    ],
+    "9. Phase 2: Design tokens": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795530585586
+      }
+    ],
+    "11. Phase 3a: Component data model, Sync_Pass, and the Derived_Geometry_Pass": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795540526430
+      }
+    ],
+    "12. Phase 3b: Component tools and copy, paste, and delete semantics": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795563237394
+      }
+    ],
+    "15. Phase 4a: Nested frames": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795565833033
+      }
+    ],
+    "16. Phase 4b: Stack layout, sizing, and the Layout_Pass": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795567607199
+      }
+    ],
+    "19. Phase 5a: Icon set": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795569577242
+      }
+    ],
+    "20. Phase 5b: Icon element end to end": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795572042419
+      }
+    ],
+    "21. Phase 5c: Device frame presets": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795573019499
+      }
+    ],
+    "23. Agent and code-mode reachability": [
+      {
+        "executionId": "cdc49859-e8f6-4373-a86e-6baabe011677",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795585513418
+      }
+    ],
+    "25. Accessibility": [
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588877318
+      }
+    ],
+    "26. Performance": [
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795588997463
+      }
+    ],
+    "28. Documentation and changelog": [
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589115607
+      }
+    ],
+    "24. Webview localization": [
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589123884
+      }
+    ],
+    "27. Test suite for Requirement 28": [
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795589124357
+      }
+    ],
+    "17. Phase 4c: Layout UI, resize and drag behavior, and kit layout": [
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795590275035
+      }
+    ],
+    "13. Phase 3c: Library integration, built-in UI kit, and component UI": [
+      {
+        "executionId": "792bd90f-67c0-4011-a98c-3f7c19601ee0",
+        "chatSessionId": "sess_ed121d41-9c93-49bd-bd4d-c813e0ac5f55",
+        "timestamp": 1795590275234
+      }
+    ]
+  }
+}

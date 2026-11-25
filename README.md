@@ -6,6 +6,7 @@ An infinite-canvas whiteboard that opens `*.openboard` files as a custom editor 
 
 - Shapes (rectangle, ellipse, diamond), lines, arrows with connectors, freehand ink, rich text, images, frames and sticky notes.
 - Undo/redo, grouping, alignment, z-order, snapping, grid and minimap.
+- Mockup design: per-corner radius, text weight, color and wrapping, image fills, frame clipping, design tokens, reusable components with instances and overrides, auto layout, and icons (see [Mockup design](#mockup-design)).
 - Auto layout for flow diagrams, Mermaid flowchart import, and a reusable component library.
 - Export to PNG, SVG, JPEG, WebP and PDF (PNG can embed the board so it can be re-imported).
 - Agent tools: every board operation is available to language models and other extensions.
@@ -16,6 +17,28 @@ An infinite-canvas whiteboard that opens `*.openboard` files as a custom editor 
 - Create a board with **OpenBoard: New Board** (or right-click a folder in the Explorer), or just create a file ending in `.openboard`.
 - Opening a `.openboard` file shows the whiteboard. **OpenBoard: Open as Text** shows the raw JSON.
 - Commands: New Board, Export Board, Zoom to Fit, Toggle Grid, Toggle Minimap, Open as Text, Copy MCP Server Config.
+
+## Mockup design
+
+Boards can describe app and web screens as well as whiteboards. Everything below is optional: a board that uses none of it loads, edits and exports exactly as before.
+
+- **Styling.** Per-corner radius, text weight and text color, text wrapping inside the box, image fills (`cover`, `contain`, `stretch`) and frame clipping.
+- **Design tokens.** Named colors and fonts that elements reference, so one change restyles a board. Token values must be literals. Color tokens can have light and dark values, with a light, dark or auto preview mode.
+- **Components.** **Create Component** turns a Frame into a master. Instances follow the master, can override text and colors locally, and can be reset (**Reset Overrides**), unlinked (**Detach Instance**) or traced back (**Go to master**). **Remove Component** unlinks a master. Library components create real masters, and the library includes a UI kit and phone, tablet and browser device frames.
+- **Auto layout.** A Frame can arrange its children in a row or column with gap, padding and alignment. Children are `fixed`, `hug` their content or `fill` the space, Frames can nest, and resizing a Frame reflows its content. **Move into Frame** and **Move out of Frame** change a child's parent.
+- **Icons.** The `icon` element draws a named glyph, recolored with the stroke color and sized freely. Use the icon picker in the tool palette or `icon.search` from an agent.
+- **Agents.** All of this is available through `openboard_call` and `ob.call`: `token.*`, `component.*`, `component.instance.*`, `component.instance.override.*` and `icon.search`, plus the new fields on `element.create` and `element.update`. See the `actions` skill topic and [docs/action-coverage.md](docs/action-coverage.md).
+- **Export.** SVG, PNG, JPEG, WebP and PDF render all of it through the same renderer as the canvas.
+
+### Icon set license
+
+The embedded icons are 167 icons from [Lucide](https://lucide.dev), taken from `lucide-static`, under the ISC license. Some are derived from Feather (MIT). The icon names are listed in [docs/icon-list.md](docs/icon-list.md) and the license texts are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). An icon whose name is not in the set is kept in the file unchanged.
+
+### Schema version 2
+
+A board is saved as `schemaVersion` 2 only when it uses a version 2 feature: tokens, token references, components, instances, overrides, `layout`, `sizing`, `ignoreLayout` or `icon` elements. Other boards keep saving as version 1, and version 1 files open without a prompt or an unsaved-changes mark.
+
+**Older builds open version 2 boards read-only.** A build that predates mockup design shows a "created by a newer version" message, rejects saves and leaves the file untouched, so it can never break component links or layout. Update the extension to edit such boards. Version 1 boards saved by an older build keep the corner, text and image fields unchanged.
 
 ## Settings
 
@@ -73,7 +96,7 @@ The code is the body of an async function; its JSON-serializable return value is
 The extension exports `{ list, describe, invoke }`:
 
 ```ts
-const ext = vscode.extensions.getExtension('openboard-dev.openboard');
+const ext = vscode.extensions.getExtension('baebranch.openboard');
 const api = await ext?.activate();
 api.list();                                   // string[] of tool names
 api.describe('openboard.element.create');     // description + input/output schema
@@ -127,7 +150,7 @@ The command is `node` when it is on `PATH`; otherwise the IDE executable is used
 
 ## File format
 
-A `.openboard` file is UTF-8 JSON with `schemaVersion`, `meta`, `viewport`, `elements` (in z-order), `assets` (embedded images) and `library` (saved components). Older versions are migrated on open. Files over 200 MB, or that are not valid JSON or do not match the schema, are not opened in the board editor (use **Open as Text**). A JSON Schema (`src/core/schema/board.schema.json`) is registered for `*.openboard`, so the text view gets validation and completion.
+A `.openboard` file is UTF-8 JSON with `schemaVersion`, `meta`, `viewport`, `elements` (in z-order), `assets` (embedded images) and `library` (saved components). `schemaVersion` is 1 or 2 (see [Schema version 2](#schema-version-2)); version 1 is migrated in memory on open. Files over 200 MB, or that are not valid JSON or do not match the schema, are not opened in the board editor (use **Open as Text**). A JSON Schema (`src/core/schema/board.schema.json`) is registered for `*.openboard`, so the text view gets validation and completion.
 
 ## Offline and security notes
 
@@ -153,16 +176,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide.
 
 ### Publishing
 
-Pushing a `v<version>` tag runs the **Release** workflow (`.github/workflows/release.yml`). It builds the extension, creates a GitHub release with the `.vsix` attached and notes from `CHANGELOG.md`, and publishes to both registries when the `VSCE_PAT` (Visual Studio Marketplace) and `OVSX_PAT` (Open VSX) repository secrets are set.
+Pushing a `v<version>` tag (matching `version` in `package.json`) runs the **Release** workflow (`.github/workflows/release.yml`). It verifies and packages the extension once, publishes that same `.vsix` to the Visual Studio Marketplace and Open VSX (checking its SHA-256 before each upload), and then creates a GitHub release with the `.vsix`, its `.sha256` checksum and notes from `CHANGELOG.md`. It needs the `VSCE_PAT` and `OVSX_PAT` repository secrets and fails if either is missing.
 
 To publish by hand, use the VS Code tasks `openboard: publish to VS Code Marketplace` and `openboard: publish to Open VSX`, or:
 
 - Visual Studio Marketplace: `npx vsce publish --packagePath openboard.vsix` (needs the `VSCE_PAT` environment variable).
-- Open VSX: `npx ovsx publish openboard.vsix` (needs the `OVSX_PAT` environment variable). `ovsx` is not a dependency; `npx` fetches it on demand.
+- Open VSX: `npx ovsx publish openboard.vsix` (needs the `OVSX_PAT` environment variable). `ovsx` is a pinned dev dependency, so `npx` runs the local copy.
 
 ## Installing from a release
 
-Download `openboard.vsix` from the [GitHub releases](https://github.com/openboard-dev/openboard/releases) page and run **Extensions: Install from VSIX...** in VS Code, or `code --install-extension openboard.vsix`.
+Download `openboard-<version>.vsix` from the [GitHub releases](https://github.com/openboard-dev/openboard/releases) page and run **Extensions: Install from VSIX...** in VS Code, or `code --install-extension openboard-<version>.vsix`. The release lists its SHA-256, which matches the package on both marketplaces.
 
 ## Contributing and security
 

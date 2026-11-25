@@ -5,8 +5,9 @@ import { PALETTE_TOOLS, nextSelectionId, nextToolIndex } from './tools';
 import { TOOL_SHORTCUTS, resolveKeyCommand, resolveToolShortcut } from './shortcuts';
 
 describe('shortcuts', () => {
-  it('maps all 13 shortcuts', () => {
-    expect(Object.keys(TOOL_SHORTCUTS)).toHaveLength(13);
+  it('maps all 14 shortcuts', () => {
+    expect(Object.keys(TOOL_SHORTCUTS)).toHaveLength(14);
+    expect(resolveToolShortcut({ key: 'K' })).toBe('icon');
     expect(resolveToolShortcut({ key: 'v' })).toBe('select');
     expect(resolveToolShortcut({ key: 'P' })).toBe('freehand');
     expect(resolveToolShortcut({ key: 's' })).toBe('sticky');
@@ -58,16 +59,16 @@ describe('buildContextMenu', () => {
 });
 
 describe('tools', () => {
-  it('has 13 unique labelled tools matching shortcut targets', () => {
-    expect(PALETTE_TOOLS).toHaveLength(13);
-    expect(new Set(PALETTE_TOOLS.map((t) => t.label)).size).toBe(13);
+  it('has 14 unique labelled tools matching shortcut targets', () => {
+    expect(PALETTE_TOOLS).toHaveLength(14);
+    expect(new Set(PALETTE_TOOLS.map((t) => t.label)).size).toBe(14);
     expect(PALETTE_TOOLS.every((t) => t.label.length > 0)).toBe(true);
     expect(new Set(PALETTE_TOOLS.map((t) => t.id))).toEqual(new Set(Object.values(TOOL_SHORTCUTS)));
   });
   it('roving focus wraps and traversal wraps', () => {
-    expect(nextToolIndex(12, 13, 'ArrowRight')).toBe(0);
-    expect(nextToolIndex(0, 13, 'ArrowLeft')).toBe(12);
-    expect(nextToolIndex(3, 13, 'x')).toBeUndefined();
+    expect(nextToolIndex(13, 14, 'ArrowRight')).toBe(0);
+    expect(nextToolIndex(0, 14, 'ArrowLeft')).toBe(13);
+    expect(nextToolIndex(3, 14, 'x')).toBeUndefined();
     expect(nextSelectionId(['a', 'b'], ['b'], false)).toBe('a');
     expect(nextSelectionId(['a', 'b'], [], true)).toBe('b');
   });

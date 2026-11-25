@@ -114,6 +114,24 @@ export async function planReplaceSource(
   return { op };
 }
 
+/**
+ * Image-fill plan (Req 9.6, 9.7): one import op that stores the asset and sets `imageFill` (fit `cover`) on `ids`.
+ * Invalid input yields no op, so an existing fill stays unchanged. Same type, size and decoding rules as images.
+ */
+export async function planImageFill(
+  ids: readonly ElementId[],
+  file: RawImageFile,
+  decode: DecodeFn,
+): Promise<{ op?: Op; rejected?: ImageRejection }> {
+  const plan = await planImageImports([file], decode, { x: 0, y: 0 }, { fillIds: [...ids] });
+  const op = plan.ops[0];
+  if (!op) return { rejected: plan.rejected[0] ?? { name: file.name, message: IMAGE_UNREADABLE_MESSAGE } };
+  const input = op.input as Record<string, unknown>;
+  delete input['x'];
+  delete input['y'];
+  return { op };
+}
+
 /** Preview of the height a replacement will produce (position/rotation/width are kept). */
 export function replacedHeight(el: ImageElement, natural: Size): number {
   return replaceImageSource(el, natural).height;

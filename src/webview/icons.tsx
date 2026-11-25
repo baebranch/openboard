@@ -5,7 +5,26 @@
 import type { ReactElement } from 'react';
 import type { ToolId } from './uiState';
 
-export type IconName = ToolId | 'export' | 'copyImage';
+export type IconName =
+  | ToolId
+  | 'export'
+  | 'copyImage'
+  | 'components'
+  | 'layers'
+  | 'slides'
+  | 'instance'
+  | 'autoLayout'
+  | 'connector'
+  | 'present'
+  | 'pdf'
+  | 'chevronRight'
+  | 'chevronLeft'
+  | 'close'
+  | 'zoomIn'
+  | 'zoomOut'
+  | 'fit'
+  | 'search'
+  | 'sidebar';
 
 const PATHS: Record<IconName, ReactElement> = {
   select: <path d="M5 3l14 8-6 1.5L10 19z" />,
@@ -29,6 +48,48 @@ const PATHS: Record<IconName, ReactElement> = {
   frame: <path d="M7 3v18M17 3v18M3 7h18M3 17h18" />,
   sticky: <path d="M5 4h14v10l-6 6H5zM13 20v-6h6" />,
   eraser: <path d="M8 20h12M5.5 14.5l8-8a2 2 0 012.8 0l2.2 2.2a2 2 0 010 2.8L12 18H9z" />,
+  icon: <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />,
+  components: <path d="M12 3l4 4-4 4-4-4zM7 12l4 4-4 4-4-4zM17 12l4 4-4 4-4-4z" />,
+  layers: <path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 4.5 9-4.5" />,
+  slides: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="1.5" />
+      <path d="M12 16v4M8 20h8" />
+    </>
+  ),
+  instance: <path d="M12 3l9 9-9 9-9-9z" />,
+  autoLayout: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M8 9h8M8 12h8M8 15h5" />
+    </>
+  ),
+  connector: <path d="M5 19c0-8 14-6 14-14M15 5h4v4" />,
+  present: <path d="M7 5l12 7-12 7z" />,
+  pdf: (
+    <>
+      <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
+      <path d="M14 3v5h5M12 11v6m0 0l-2.5-2.5M12 17l2.5-2.5" />
+    </>
+  ),
+  chevronRight: <path d="M9 6l6 6-6 6" />,
+  chevronLeft: <path d="M15 6l-6 6 6 6" />,
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  zoomIn: <path d="M12 5v14M5 12h14" />,
+  zoomOut: <path d="M5 12h14" />,
+  fit: <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />,
+  sidebar: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M20 20l-4.5-4.5" />
+    </>
+  ),
   export: <path d="M12 15V3m0 0L7 8m5-5l5 5M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6" />,
   copyImage: (
     <>

@@ -15,7 +15,7 @@ interface Api {
   invoke(name: string, input: unknown): Promise<unknown>;
 }
 
-const EXTENSION_ID = 'openboard-dev.openboard';
+const EXTENSION_ID = 'baebranch.openboard';
 const workspaceDir = process.env.OPENBOARD_INT_WORKSPACE ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
 let counter = 0;
 

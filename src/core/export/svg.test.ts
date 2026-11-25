@@ -97,3 +97,123 @@ describe('renderToSvg', () => {
     expect(escapeXml('<&>"\'')).toBe('&lt;&amp;&gt;&quot;&#39;');
   });
 });
+
+describe('per-corner radii', () => {
+  const withRadii = (type: 'rectangle' | 'frame' | 'sticky', radii: [number, number, number, number]): Element => {
+    const b = base('x', 0, 0, 100, 60);
+    const common = { ...b, style: { ...b.style, cornerRadii: radii } };
+    if (type === 'rectangle') return { ...common, type };
+    if (type === 'frame') return { ...common, type, name: 'F' };
+    return { ...common, type, ...text };
+  };
+
+  it('emits one closed path with arcs only for non-zero corners (TL,TR,BR,BL)', () => {
+    for (const t of ['rectangle', 'frame', 'sticky'] as const) {
+      const r = renderToSvg({ elements: [withRadii(t, [10, 0, 5, 0])], assets: [] }, { kind: 'board' });
+      expect(r.ok).toBe(true);
+      if (!r.ok) continue;
+      const d = /<path d="([^"]+)"/.exec(r.value.svg)![1]!;
+      expect(d.endsWith('Z')).toBe(true);
+      expect(d.match(/ A /g)).toHaveLength(2);
+      expect(d).toContain('A 10 10 0 0 1 10 0');
+      expect(d).toContain('A 5 5 0 0 1 95 60');
+    }
+  });
+
+  it('keeps rect output when cornerRadii is absent', () => {
+    const r = renderToSvg({ elements: [{ ...base('r'), type: 'rectangle' }], assets: [] }, { kind: 'board' });
+    expect(r.ok && r.value.svg).toContain('<rect x="0" y="0" width="100" height="60"');
+  });
+});
+
+describe('icon rendering (Req 23.4, 23.5, 23.6)', () => {
+  const icon = (name: string): Element => ({ ...base('i', 10, 20, 48, 48), type: 'icon', name });
+  const render = (name: string): string => {
+    const r = renderToSvg({ elements: [icon(name)], assets: [] }, { kind: 'board' });
+    if (!r.ok) throw new Error('render failed');
+    return r.value.svg;
+  };
+
+  it('scales the Icon_Set path with a non-scaling stroke and no external reference', () => {
+    const svg = render('activity');
+    expect(svg).toContain('d="M22 12h-2.48');
+    expect(svg).toContain('translate(10 20) scale(2 2)');
+    expect(svg).toContain('vector-effect="non-scaling-stroke"');
+    expect(svg).not.toContain('foreignObject');
+    expect(svg).not.toContain('href');
+  });
+
+  it('draws the placeholder glyph for an unknown name', () => {
+    expect(render('no-such-icon')).toContain('d="M5 3h14a2 2 0 0 1 2 2v14');
+  });
+});
+
+describe('frame clipping (Req 10.2, 10.4, 10.5)', () => {
+  const frame = (id: string, clip: boolean, parentId?: string): Element => ({
+    ...base(id, 0, 0, 100, 60),
+    type: 'frame',
+    name: id,
+    ...(clip ? { clipContent: true } : {}),
+    ...(parentId ? { parentId } : {}),
+  });
+  const rect = (id: string, parentId: string): Element => ({ ...base(id, 0, 0, 20, 20), type: 'rectangle', parentId });
+
+  it('nests clipPaths and clips each descendant by its nearest clipping ancestor', () => {
+    const els = [frame('A', true), frame('B', true, 'A'), rect('R', 'B')];
+    const r = renderToSvg({ elements: els, assets: [] }, { kind: 'board' });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const svg = r.value.svg;
+    expect(svg).toContain('<clipPath id="clipc-B" clip-path="url(#clipc-A)">');
+    expect(svg).toContain('<clipPath id="clipc-A">');
+    expect(svg).toContain('<g clip-path="url(#clipc-B)"><g data-id="R"');
+    expect(svg).toContain('<g clip-path="url(#clipc-A)"><g data-id="B"');
+  });
+
+  it('emits no clip markup when no frame clips', () => {
+    const r = renderToSvg({ elements: [frame('A', false), rect('R', 'A')], assets: [] }, { kind: 'board' });
+    expect(r.ok && r.value.svg).not.toContain('clip');
+  });
+});
+
+describe('text wrapping (Req 8.4, 8.6, 1.6)', () => {
+  const textEl = (runs: { text: string; bold?: boolean; italic?: boolean }[], textWrap?: 'none' | 'wrap'): Element => ({
+    ...base('t', 0, 0, 60, 20),
+    type: 'text',
+    runs,
+    fontFamily: 'sans-serif',
+    fontSize: 16,
+    align: 'left',
+    ...(textWrap ? { textWrap } : {}),
+  });
+  const render = (el: Element) => {
+    const r = renderToSvg({ elements: [el], assets: [] }, { kind: 'board' });
+    expect(r.ok).toBe(true);
+    return r.ok ? r.value.svg : '';
+  };
+  const lineTexts = (svg: string) =>
+    [...svg.matchAll(/<text [^>]*>(.*?)<\/text>/g)].map((m) => m[1]!.replace(/<[^>]+>/g, ''));
+
+  it('keeps newline-only breaking when textWrap is absent or none', () => {
+    const runs = [{ text: 'alpha beta gamma delta\nx' }];
+    expect(render(textEl(runs, 'none'))).toBe(render(textEl(runs)));
+    expect(lineTexts(render(textEl(runs)))).toEqual(['alpha beta gamma delta', 'x']);
+  });
+
+  it('wraps at the element width and draws lines past the bottom without clipping', () => {
+    const svg = render(textEl([{ text: 'alpha beta gamma delta\nx' }], 'wrap'));
+    const lines = lineTexts(svg);
+    expect(lines.length).toBeGreaterThan(2);
+    expect(lines.join(' ')).toBe('alpha beta gamma delta x');
+    expect(svg).not.toContain('clip');
+  });
+
+  it('preserves run styling across a split run', () => {
+    const svg = render(textEl([{ text: 'aaaa bbbb ', bold: true }, { text: 'cccc dddd', italic: true }], 'wrap'));
+    const lines = lineTexts(svg);
+    expect(lines.length).toBeGreaterThan(1);
+    expect(lines.join(' ')).toBe('aaaa bbbb cccc dddd');
+    for (const w of ['aaaa', 'bbbb']) expect(svg).toMatch(new RegExp(`<tspan font-weight="bold">[^<]*${w}`));
+    for (const w of ['cccc', 'dddd']) expect(svg).toMatch(new RegExp(`<tspan font-style="italic">[^<]*${w}`));
+  });
+});

@@ -5,5 +5,6 @@ export default defineConfig({
   test: {
     include: ['test/**/*.test.ts', 'src/**/*.test.ts', 'src/**/*.dom.test.tsx'],
     environment: 'node',
+    setupFiles: ['test/helpers/fast-check-setup.ts'],
   },
 });

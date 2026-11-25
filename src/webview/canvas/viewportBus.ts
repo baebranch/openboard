@@ -19,6 +19,19 @@ export function onViewCommand(l: ViewCommandListener): () => void {
   return () => viewCommandListeners.delete(l);
 }
 
+type FocusListener = (b: { x: number; y: number; width: number; height: number }) => void;
+const focusListeners = new Set<FocusListener>();
+
+/** Ask the mounted Canvas to fit the given board bounds in view (no document edit, no history entry). */
+export function emitFocusBounds(b: { x: number; y: number; width: number; height: number }): void {
+  for (const l of [...focusListeners]) l(b);
+}
+
+export function onFocusBounds(l: FocusListener): () => void {
+  focusListeners.add(l);
+  return () => focusListeners.delete(l);
+}
+
 /** Called by messaging when the host asks the webview to restore a viewport. */
 export function emitHostViewport(v: Viewport): void {
   for (const l of [...listeners]) l(v);

@@ -34,7 +34,7 @@
       "label": "openboard: publish to Open VSX",
       "detail": "Requires the OVSX_PAT environment variable (open-vsx.org access token)",
       "type": "shell",
-      "command": "npx --yes ovsx publish openboard.vsix",
+      "command": "npx ovsx publish openboard.vsix",
       "dependsOn": ["openboard: package (vsix)"],
       "problemMatcher": []
     },

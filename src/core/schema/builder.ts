@@ -26,8 +26,13 @@ export const s = {
     if (opts.max !== undefined) out['maximum'] = opts.max;
     return out;
   },
-  integer(opts: { min?: number; max?: number } = {}): JsonSchema {
-    return { ...s.number(opts), type: 'integer' };
+  integer(opts: { min?: number; max?: number; multipleOf?: number } = {}): JsonSchema {
+    const { multipleOf, ...range } = opts;
+    return {
+      ...s.number(range),
+      type: 'integer',
+      ...(multipleOf !== undefined ? { multipleOf } : {}),
+    };
   },
   boolean(): JsonSchema {
     return { type: 'boolean' };

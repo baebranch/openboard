@@ -37,6 +37,20 @@ from the registry, and `test/action-coverage.test.ts` checks them against it.
 | `send-to-back` | Send to back | `openboard.element.arrange` (`zorder`) |
 | `nudge` | Nudge with arrow keys | `openboard.element.arrange` (`nudge`) |
 
+## Component context menu entries (`src/webview/palette/contextMenu.ts`)
+
+Each entry is listed only when the selection satisfies the matching tool's preconditions.
+
+| Entry | User action | Tool |
+| --- | --- | --- |
+| `create-component` | Create Component | `openboard.component.create` |
+| `remove-component` | Remove Component | `openboard.component.remove` |
+| `detach-instance` | Detach Instance | `openboard.component.instance.detach` |
+| `reset-overrides` | Reset Overrides | `openboard.component.instance.override.reset` |
+| `go-to-master` | Go to master | none (selects the master and changes the viewport; no history entry) |
+| `move-into-frame` | Move into Frame | `openboard.element.arrange` (`moveIntoFrame`) |
+| `move-out-of-frame` | Move out of Frame | `openboard.element.arrange` (`moveOutOfFrame`) |
+
 ## Gestures and dialogs
 
 | User action | Tool |
@@ -47,3 +61,7 @@ from the registry, and `test/action-coverage.test.ts` checks them against it.
 | Drag connector | `openboard.connect` (inside `openboard.batch` when combined) |
 | Paste Mermaid, import image | `openboard.import` |
 | Export dialog | `openboard.export` |
+| Create, edit, rename, delete, list, or detach design tokens, or set the token mode (light, dark, auto) | `openboard.token.create`, `openboard.token.update`, `openboard.token.rename`, `openboard.token.delete`, `openboard.token.list`, `openboard.token.detach`, `openboard.token.mode` |
+| Create Component, Remove Component, component panel list | `openboard.component.create`, `openboard.component.remove`, `openboard.component.list` |
+| Insert Instance, edit or Reset Overrides, Detach Instance | `openboard.component.instance.create`, `openboard.component.instance.override.set`, `openboard.component.instance.override.reset`, `openboard.component.instance.detach` |
+| Icon picker search | `openboard.icon.search` |

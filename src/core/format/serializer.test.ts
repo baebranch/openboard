@@ -40,6 +40,22 @@ describe('serialize', () => {
     expect(out.elements[1].assetId).toBe('a1');
   });
 
+  it('keeps assets referenced by imageFill (elements and library), remapping duplicates', () => {
+    const rect = (id: string, assetId: string): Element =>
+      ({ id, type: 'rectangle', x: 0, y: 0, width: 10, height: 10, rotation: 0, style: { ...style, imageFill: { assetId, fit: 'cover' } } }) as Element;
+    const out = JSON.parse(
+      serialize(
+        doc({
+          elements: [rect('r1', 'a1')],
+          library: [{ id: 'l', name: 'l', elements: [rect('r2', 'a2')] } as never],
+          assets: [asset('a1', 'aGk='), asset('a2', 'aGk='), asset('a3', 'Ynll')],
+        }),
+      ),
+    );
+    expect(out.assets.map((a: Asset) => a.id)).toEqual(['a1']);
+    expect(out.library[0].elements[0].style.imageFill.assetId).toBe('a1');
+  });
+
   it('flattens extra bags to their original location', () => {
     const out = JSON.parse(
       serialize(doc({ extra: { zzz: { b: 1, a: 2 } }, elements: [img('e1', 'a1', { custom: 5 })], assets: [asset('a1', 'aGk=')] })),

@@ -17,6 +17,9 @@ import {
   type ExportScope,
 } from '../export';
 import { embedDocument } from '../export/png-chunk';
+import type { PdfPage } from '../export/pdf';
+import { EXPORT_MAX_PIXELS, SIZE_LIMIT_MESSAGE } from '../export/scope';
+import { framesById, renderFrameSvg, slideFrames } from '../export/slides';
 import { s } from '../schema/builder';
 import type { DefaultToolRegistry, ToolDefinition } from './registry';
 
@@ -72,6 +75,7 @@ async function renderOne(
     padding: opts.padding,
     background: opts.background,
     matchTheme: opts.matchTheme,
+    ...(opts.tokenMode ? { tokenMode: opts.tokenMode } : {}),
   });
   if (!svgRes.ok) throw new ToolFailure(svgRes.error.code, svgRes.error.message);
   const { svg, width, height } = svgRes.value;
@@ -107,14 +111,17 @@ function suffixPath(path: string, index: number): string {
 interface ExportInput {
   board?: string;
   format?: ExportFormat;
-  scope?: 'board' | 'selection' | 'frame' | 'allFrames';
+  scope?: 'board' | 'selection' | 'frame' | 'allFrames' | 'frames';
   ids?: string[];
   frameId?: string;
+  frameIds?: string[];
   scale?: 1 | 2 | 3 | 4;
   padding?: number;
   background?: 'transparent' | 'white' | 'theme';
   matchTheme?: boolean;
+  tokenMode?: 'light' | 'dark' | 'active';
   embedBoard?: boolean;
+  excludeMasters?: boolean;
   path?: string;
 }
 
@@ -140,18 +147,21 @@ function exportTool(host: ExportHost): ToolDefinition<ExportInput, { results: Ex
   return {
     name: 'openboard.export',
     description:
-      'Export the board, a selection (`ids`), a frame (`frameId`), or every frame (`scope`: board | selection | frame | allFrames) as png, svg, jpeg, webp, or pdf. Options: `scale` 1 to 4, `padding` 0 to 256, `background`, `matchTheme`, `embedBoard` (PNG only). With `path` the files are written there (allFrames adds -1, -2 suffixes) and the result lists paths; otherwise base64 `data` and `mimeType` are returned. allFrames returns one result per Frame.',
+      'Export the board, a selection (`ids`), a frame (`frameId`), every frame, or slides (`scope`: board | selection | frame | allFrames | frames) as png, svg, jpeg, webp, or pdf. `frames` exports frames cut to their own box in `frameIds` order (default: the slide order, top-level non-master frames in reading order); as pdf it writes ONE file with a page per frame. Options: `scale` 1 to 4, `padding` 0 to 256, `background`, `matchTheme`, `tokenMode` (light | dark | active, default active), `embedBoard` (PNG only), `excludeMasters` (omit Component_Masters, their descendants, and attached connectors). With `path` the files are written there (allFrames adds -1, -2 suffixes) and the result lists paths; otherwise base64 `data` and `mimeType` are returned. allFrames returns one result per Frame.',
     inputSchema: s.object({
       board: s.opt(s.string({ minLength: 1 })),
       format: s.opt(s.enum(EXPORT_FORMATS)),
-      scope: s.opt(s.enum(['board', 'selection', 'frame', 'allFrames'])),
+      scope: s.opt(s.enum(['board', 'selection', 'frame', 'allFrames', 'frames'])),
       ids: s.opt(s.array(s.string(), { minItems: 1 })),
       frameId: s.opt(s.string({ minLength: 1 })),
+      frameIds: s.opt(s.array(s.string({ minLength: 1 }), { minItems: 1 })),
       scale: s.opt(s.enum([1, 2, 3, 4])),
       padding: s.opt(s.number()),
       background: s.opt(s.enum(['transparent', 'white', 'theme'])),
       matchTheme: s.opt(s.boolean()),
+      tokenMode: s.opt(s.enum(['light', 'dark', 'active'])),
       embedBoard: s.opt(s.boolean()),
+      excludeMasters: s.opt(s.boolean()),
       path: s.opt(s.string({ minLength: 1 })),
     }),
     outputSchema: s.object({ results: s.array(resultItemSchema) }),
@@ -162,6 +172,7 @@ function exportTool(host: ExportHost): ToolDefinition<ExportInput, { results: Ex
       if (!ctx.model) throw new ToolFailure('no_board', 'No board is available for this tool');
       const doc = ctx.model.getDocument();
       const kind = input.scope ?? 'board';
+      if (kind === 'frames') return exportFrames(host, doc, input);
       let scope: ExportScope;
       if (kind === 'selection') {
         if (!input.ids) throw new ToolFailure('invalid_input', 'scope "selection" requires `ids`');
@@ -177,14 +188,16 @@ function exportTool(host: ExportHost): ToolDefinition<ExportInput, { results: Ex
         padding: input.padding ?? 0,
         background: input.background ?? 'white',
         matchTheme: input.matchTheme ?? false,
+        ...(input.tokenMode !== undefined ? { tokenMode: input.tokenMode } : {}),
         ...(input.embedBoard !== undefined ? { embedBoard: input.embedBoard } : {}),
+        ...(input.excludeMasters ? { excludeMasters: true } : {}),
       };
 
       const regions: { frameId?: string; opts: ExportOptions }[] = [];
       const first = prepareExport(doc, opts);
       if (!first.ok) throw new ToolFailure(first.error.code, first.error.message);
       if (kind === 'allFrames') {
-        for (const { frame } of selectFrameScopes(doc)) {
+        for (const { frame } of selectFrameScopes(doc, { excludeMasters: opts.excludeMasters === true })) {
           regions.push({ frameId: frame.id, opts: { ...opts, scope: { kind: 'frame', id: frame.id } } });
         }
       } else regions.push({ opts });
@@ -206,6 +219,69 @@ function exportTool(host: ExportHost): ToolDefinition<ExportInput, { results: Ex
       return { results };
     },
   };
+}
+
+/**
+ * Slides export (`scope: "frames"`): each frame cut to its own box, in `frameIds` order (default:
+ * the slide order, top-level non-master frames in reading order). PDF writes ONE file with one page
+ * per frame; other formats write one file per frame (`-1`, `-2` suffixes), like allFrames.
+ */
+async function exportFrames(host: ExportHost, doc: BoardDocument, input: ExportInput): Promise<{ results: ExportResultItem[] }> {
+  const format = input.format ?? 'pdf';
+  const scale = input.scale ?? 1;
+  const background = input.background ?? 'white';
+  let frames: Element[];
+  if (input.frameIds) {
+    const r = framesById(doc.elements, input.frameIds);
+    if (r.missing.length > 0) throw new ToolFailure('not_found', `Not a frame: ${r.missing.join(', ')}`);
+    frames = r.frames;
+  } else frames = slideFrames(doc.elements);
+  if (frames.length === 0) throw new ToolFailure('empty-scope', 'There are no frames to export.');
+  for (const f of frames) {
+    if (Math.ceil(f.width * scale) > EXPORT_MAX_PIXELS || Math.ceil(f.height * scale) > EXPORT_MAX_PIXELS) {
+      throw new ToolFailure('size-limit', SIZE_LIMIT_MESSAGE);
+    }
+  }
+  const render = (f: Element) => {
+    const r = renderFrameSvg(doc, f, {
+      background,
+      matchTheme: input.matchTheme ?? false,
+      ...(input.tokenMode ? { tokenMode: input.tokenMode } : {}),
+    });
+    if (!r.ok) throw new ToolFailure(r.error.code, r.error.message);
+    return r.value;
+  };
+  const save = async (bytes: Uint8Array, item: ExportResultItem, target: string | undefined): Promise<ExportResultItem> => {
+    if (target !== undefined) {
+      await host.writeFile(target, bytes);
+      return { ...item, path: target };
+    }
+    return { ...item, data: toBase64(bytes) };
+  };
+
+  if (format === 'pdf') {
+    const pages: PdfPage[] = [];
+    for (const f of frames) {
+      const { svg, width, height } = render(f);
+      const jpeg = await host.rasterize(svg, { format: 'jpeg', scale, width, height, background });
+      pages.push({ width, height, pixelWidth: Math.ceil(width * scale), pixelHeight: Math.ceil(height * scale), jpeg });
+    }
+    const first = pages[0]!;
+    return { results: [await save(writePdf(pages), { mimeType: MIME.pdf, width: first.width, height: first.height }, input.path)] };
+  }
+
+  const results: ExportResultItem[] = [];
+  for (const [i, f] of frames.entries()) {
+    const { svg, width, height } = render(f);
+    const enc = new TextEncoder();
+    const bytes =
+      format === 'svg' ? enc.encode(svg) : await host.rasterize(svg, { format, scale, width, height, background });
+    const w = format === 'svg' ? width : Math.ceil(width * scale);
+    const h = format === 'svg' ? height : Math.ceil(height * scale);
+    const target = input.path !== undefined && frames.length > 1 ? suffixPath(input.path, i) : input.path;
+    results.push(await save(bytes, { mimeType: MIME[format], width: w, height: h, frameId: f.id }, target));
+  }
+  return { results };
 }
 
 interface PreviewInput {

@@ -25,8 +25,12 @@ export interface ExportOptions {
   padding: number;
   background: ExportBackground;
   matchTheme: boolean;
+  /** Token mode to export in (Req 12.5): `light`, `dark`, or `active` (the board's mode, the default). */
+  tokenMode?: 'light' | 'dark' | 'active';
   /** PNG only. */
   embedBoard?: boolean;
+  /** Omit Component_Masters, their descendants, and attached connectors (Req 17.2). Default false. */
+  excludeMasters?: boolean;
 }
 
 export type ExportErrorCode = 'empty-scope' | 'size-limit' | 'invalid-padding' | 'invalid-option';
@@ -70,26 +74,78 @@ export function selectScope(doc: Pick<BoardDocument, 'elements'>, scope: ExportS
       return frame ? inFrame(all, frame) : [];
     }
     case 'allFrames': {
-      const frames = all.filter((e) => e.type === 'frame');
-      return all.filter((e) => frames.some((f) => e.id === f.id || belongsToFrame(e, f)));
+      const frames = topLevelFrames(all);
+      return all.filter((e) => frames.some((f) => e.id === f.id || belongsToFrame(e, f, all)));
     }
   }
 }
 
-/** Elements for one Frame: the frame, its children, and anything intersecting its bounds. */
-export function inFrame(elements: readonly Element[], frame: Element): Element[] {
-  return elements.filter((e) => e.id === frame.id || belongsToFrame(e, frame));
+/** Frames with no Frame parent; the all-Frames scope yields one file per such Frame (Req 21.9). */
+export function topLevelFrames(elements: readonly Element[]): Element[] {
+  const frameIds = new Set(elements.filter((e) => e.type === 'frame').map((e) => e.id));
+  return elements.filter((e) => e.type === 'frame' && !(e.parentId !== undefined && frameIds.has(e.parentId)));
 }
 
-function belongsToFrame(e: Element, frame: Element): boolean {
-  return e.parentId === frame.id || intersects(elementBounds(e), elementBounds(frame));
+/** Elements for one Frame (top-level or nested): the frame, its descendants, and anything intersecting its bounds. */
+export function inFrame(elements: readonly Element[], frame: Element): Element[] {
+  return elements.filter((e) => e.id === frame.id || belongsToFrame(e, frame, elements));
+}
+
+const byIdCache = new WeakMap<readonly Element[], Map<ElementId, Element>>();
+
+function belongsToFrame(e: Element, frame: Element, all: readonly Element[]): boolean {
+  if (e.parentId === frame.id || intersects(elementBounds(e), elementBounds(frame))) return true;
+  if (e.parentId === undefined) return false;
+  // Deeper descendants: walk the parent chain (cycle-safe).
+  let byId = byIdCache.get(all);
+  if (!byId) {
+    byId = new Map(all.map((x) => [x.id, x]));
+    byIdCache.set(all, byId);
+  }
+  const seen = new Set<ElementId>();
+  for (let cur = byId.get(e.parentId); cur && !seen.has(cur.id); cur = cur.parentId ? byId.get(cur.parentId) : undefined) {
+    if (cur.id === frame.id) return true;
+    seen.add(cur.id);
+  }
+  return false;
+}
+
+/** Whether the document has at least one Component_Master (Req 17.1). */
+export function hasComponentMasters(doc: Pick<BoardDocument, 'elements'>): boolean {
+  return doc.elements.some((e) => e.type === 'frame' && e.component !== undefined);
+}
+
+/**
+ * Drops every Component_Master, every descendant of one, and every Edge with an endpoint among
+ * the dropped Elements (Req 17.2). Returns a doc whose other elements are unchanged.
+ */
+export function omitComponentMasters<D extends Pick<BoardDocument, 'elements'>>(doc: D): D {
+  if (!hasComponentMasters(doc)) return doc;
+  const byId = new Map(doc.elements.map((e) => [e.id, e]));
+  const omitted = new Set<ElementId>();
+  const isOmitted = (e: Element): boolean => {
+    const seen = new Set<ElementId>();
+    for (let cur: Element | undefined = e; cur && !seen.has(cur.id); cur = cur.parentId ? byId.get(cur.parentId) : undefined) {
+      if (omitted.has(cur.id)) return true;
+      if (cur.type === 'frame' && cur.component !== undefined) return true;
+      seen.add(cur.id);
+    }
+    return false;
+  };
+  for (const e of doc.elements) if (isOmitted(e)) omitted.add(e.id);
+  const elements = doc.elements.filter(
+    (e) => !omitted.has(e.id) && !(e.type === 'edge' && (omitted.has(e.sourceId) || omitted.has(e.targetId))),
+  );
+  return { ...doc, elements };
 }
 
 /** Per-Frame element lists for the all-Frames scope (one file per Frame). */
 export function selectFrameScopes(
   doc: Pick<BoardDocument, 'elements'>,
+  options: { excludeMasters?: boolean } = {},
 ): { frame: Element; elements: Element[] }[] {
-  return doc.elements.filter((e) => e.type === 'frame').map((frame) => ({ frame, elements: inFrame(doc.elements, frame) }));
+  if (options.excludeMasters) doc = omitComponentMasters(doc);
+  return topLevelFrames(doc.elements).map((frame) => ({ frame, elements: inFrame(doc.elements, frame) }));
 }
 
 /** Union of the elements' (rotated) bounds, or undefined when empty. */
@@ -166,7 +222,7 @@ export function prepareExport(
 ): ExportResult<{ elements: Element[]; bounds: Bounds; w: number; h: number }> {
   const err = validateOptions(opts);
   if (err) return { ok: false, error: err };
-  const elements = selectScope(doc, opts.scope);
+  const elements = selectScope(opts.excludeMasters ? omitComponentMasters(doc) : doc, opts.scope);
   const scale = isRaster(opts.format) ? opts.scale : 1;
   const r = checkLimits(elements, opts.padding, scale);
   if (!r.ok) return r;

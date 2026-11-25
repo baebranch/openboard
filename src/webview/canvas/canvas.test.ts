@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { BoardDocument, Element, EdgeElement } from '../../core/model/types';
 import { defaultStyle } from '../../core/shapes';
+import { runLayoutPass } from '../../core/layout/run-layout-pass';
 import {
   TOOL_BATCH,
   TOOL_CONNECT,
@@ -9,8 +10,13 @@ import {
   TOOL_ELEMENT_UPDATE,
   connectOp,
   createOp,
+  iconCreateOp,
   deleteOp,
   drawGeometry,
+  dropContainerKind,
+  dropOp,
+  layoutInsertionIndex,
+  findDropTarget,
   formatZoomPercent,
   freehandOp,
   moveOp,
@@ -20,6 +26,7 @@ import {
   snapMoveDelta,
 } from './gestures';
 import { toReactFlow } from './project';
+import { svgFor } from './ElementNode';
 import { dispatchOp, nextGestureId, setOpSender } from '../ops';
 
 function rect(id: string, x: number, y: number, w = 100, h = 50): Element {
@@ -72,6 +79,49 @@ describe('toReactFlow', () => {
     expect(els[0]!.x).toBe(0);
   });
 
+  it('carries the clip chain only for children of clipping frames and clips the live render (Req 10.2, 24.8)', () => {
+    const frame = (id: string, extra: object = {}): Element =>
+      ({ id, type: 'frame', name: id, x: 0, y: 0, width: 100, height: 100, rotation: 0, style: defaultStyle(), ...extra }) as Element;
+    const child = { ...rect('c', 10, 10), parentId: 'f' } as Element;
+    const plain = { ...rect('p', 10, 10), parentId: 'g' } as Element;
+    const clipping = toReactFlow(doc([frame('f', { clipContent: true }), frame('g'), child, plain]));
+    const byId = new Map(clipping.nodes.map((n) => [n.id, n.data]));
+    expect(byId.get('c')!.clipChain?.map((e) => e.id)).toEqual(['f']);
+    expect('clipChain' in byId.get('p')!).toBe(false);
+    expect('clipChain' in byId.get('f')!).toBe(false);
+
+    const live = svgFor(child, [], byId.get('c')!.clipChain, undefined, { clipAncestors: ['f'] });
+    expect(live).toContain('clip-path="url(#clipc-f)"');
+    expect(svgFor(plain, [], undefined)).not.toContain('clip-path');
+
+    // an instance of a clipping master clips too, without clipContent of its own
+    const master = frame('m', { clipContent: true, component: 'Phone' });
+    const inst = frame('i', { instanceOf: 'm' });
+    const kid = { ...rect('k', 10, 10), parentId: 'i' } as Element;
+    const p2 = toReactFlow(doc([master, inst, kid]));
+    const k = p2.nodes.find((n) => n.id === 'k')!.data;
+    expect(svgFor(kid, [], k.clipChain, undefined, { clipAncestors: ['i'] })).toContain('clip-path="url(#clipc-i)"');
+  });
+
+  it('culls clipped, layout, instance and instance-child elements by their own bounds plus 256 px (Req 27.5)', () => {
+    const frame = (id: string, x: number, extra: object = {}): Element =>
+      ({ id, type: 'frame', name: id, x, y: 0, width: 100, height: 100, rotation: 0, style: defaultStyle(), ...extra }) as Element;
+    const layout = { direction: 'horizontal', gap: 0, padding: { top: 0, right: 0, bottom: 0, left: 0 }, mainAlign: 'start', crossAlign: 'start' };
+    const els: Element[] = [
+      frame('clip-in', 0, { clipContent: true }),
+      frame('clip-edge', 800 + 256, { clipContent: true }), // touches the margin
+      frame('clip-far', 800 + 400, { clipContent: true }),
+      frame('lay-far', 800 + 400, { layout }),
+      frame('lay-in', 10, { layout }),
+      frame('inst-far', 800 + 400, { instanceOf: 'clip-in' }),
+      frame('inst-in', 20, { instanceOf: 'clip-in' }),
+      { ...rect('kid-far', 800 + 400, 0), parentId: 'inst-far' } as Element,
+      { ...rect('kid-in', 30, 0), parentId: 'inst-far' } as Element, // parent off-screen, child visible
+    ];
+    const ids = toReactFlow(doc(els), view()).nodes.map((n) => n.id);
+    expect(ids).toEqual(['clip-in', 'clip-edge', 'lay-in', 'inst-in', 'kid-in']);
+  });
+
   it('projects everything without a viewport', () => {
     const d = doc([rect('a', 0, 0), rect('b', 99999, 0)]);
     expect(toReactFlow(d).nodes).toHaveLength(2);
@@ -86,6 +136,55 @@ describe('gesture -> op mapping', () => {
     const g = moveOp(els, ['a', 'b'], 5, 0)!;
     expect(g.tool).toBe(TOOL_BATCH);
     expect((g.input as { operations: unknown[] }).operations).toHaveLength(2);
+  });
+
+  it('a drop onto a Frame sets parentId on each dropped root (Frames included) in one op', () => {
+    const f = { ...rect('f', 0, 0, 500, 500), type: 'frame' } as Element;
+    const inner = { ...rect('g', 300, 300, 50, 50), type: 'frame', parentId: 'x' } as Element;
+    const child = { ...rect('c', 310, 310, 10, 10), parentId: 'g' } as Element;
+    const all = [f, rect('a', 600, 10), inner, child];
+    const target = findDropTarget(all, ['a', 'g', 'c'], { x: 100, y: 100 });
+    expect(target?.id).toBe('f');
+    const op = dropOp(all, ['a', 'g', 'c'], -550, 0, target)!;
+    const ops = (op.input as { operations: Array<{ input: { ids: string[]; set: Record<string, unknown> } }> }).operations;
+    expect(op.tool).toBe(TOOL_BATCH);
+    expect(ops.find((o) => o.input.ids[0] === 'a')!.input.set['parentId']).toBe('f');
+    expect(ops.find((o) => o.input.ids[0] === 'g')!.input.set['parentId']).toBe('f');
+    expect(ops.find((o) => o.input.ids[0] === 'c')!.input.set['parentId']).toBeUndefined();
+  });
+
+  it('a drop never targets the dragged Frame or its descendants, and a plain move keeps parents', () => {
+    const f = { ...rect('f', 0, 0, 500, 500), type: 'frame' } as Element;
+    const inner = { ...rect('g', 10, 10, 100, 100), type: 'frame', parentId: 'f' } as Element;
+    expect(findDropTarget([f, inner], ['f'], { x: 50, y: 50 })).toBeUndefined();
+    expect(findDropTarget([f, inner], ['f'], { x: 50, y: 50 })).toBeUndefined();
+    expect(findDropTarget([f, rect('a', 600, 0)], ['a'], { x: 700, y: 10 })).toBeUndefined();
+    expect(dropOp([rect('a', 0, 0)], ['a'], 5, 0, undefined)).toEqual(moveOp([rect('a', 0, 0)], ['a'], 5, 0));
+  });
+
+  it('a Layout_Frame is a layout drop target and a drag reorders children after the reflow', () => {
+    const f = {
+      ...rect('f', 0, 0, 400, 100),
+      type: 'frame',
+      layout: { direction: 'horizontal', gap: 10, padding: { top: 0, right: 0, bottom: 0, left: 0 }, mainAlign: 'start', crossAlign: 'start' },
+    } as Element;
+    expect(dropContainerKind(f)).toBe('layout');
+    expect(dropContainerKind({ ...f, layout: undefined } as Element)).toBe('frame');
+    expect(dropContainerKind(rect('r', 0, 0))).toBeUndefined();
+    const kids = ['a', 'b', 'c'].map((id, i) => ({ ...rect(id, i * 110, 0, 100, 50), parentId: 'f' }) as Element);
+    const all = [f, ...kids];
+    // Drag 'a' to the right of 'c' (center 300): insertion index is 2 among the others.
+    expect(layoutInsertionIndex(all, f, 330, new Set(['a']))).toBe(2);
+    const target = findDropTarget(all, ['a'], { x: 380, y: 20 });
+    expect(target?.id).toBe('f');
+    const op = dropOp(all, ['a'], 280, 0, target)!;
+    expect(op.tool).toBe(TOOL_ELEMENT_UPDATE);
+    const set = (op.input as { set: Record<string, unknown> }).set;
+    const moved = all.map((e) => (e.id === 'a' ? ({ ...e, ...set } as Element) : e));
+    const out = runLayoutPass({ elements: moved } as unknown as BoardDocument).doc.elements;
+    const byX = out.filter((e) => e.parentId === 'f').sort((p, q) => p.x - q.x).map((e) => e.id);
+    expect(byX).toEqual(['b', 'c', 'a']);
+    expect(out.find((e) => e.id === 'b')!.x).toBe(0);
   });
 
   it('a zero move produces no op', () => {
@@ -110,6 +209,17 @@ describe('gesture -> op mapping', () => {
     const op = resizeOp(els, ['a'], { x: 10, y: 10, width: 100, height: 50 }, { x: 10, y: 10, width: 200, height: 100 })!;
     expect(op.input).toEqual({ ids: ['a'], set: { x: 10, y: 10, width: 200, height: 100 } });
     expect(resizeOp(els, ['a'], { x: 0, y: 0, width: 1, height: 1 }, { x: 0, y: 0, width: 1, height: 1 })).toBeUndefined();
+  });
+
+  it('resizing a hug axis writes the size and sets only that axis to fixed in the same op (Req 20.10)', () => {
+    const f = { ...rect('f', 0, 0, 100, 50), type: 'frame', sizing: { width: 'hug', height: 'hug' } } as unknown as Element;
+    const op = resizeOp([f], ['f'], { x: 0, y: 0, width: 100, height: 50 }, { x: 0, y: 0, width: 200, height: 50 })!;
+    expect(op.input).toEqual({ ids: ['f'], set: { x: 0, y: 0, width: 200, height: 50, sizing: { width: 'fixed', height: 'hug' } } });
+  });
+
+  it('resizing a fixed or sizing-less element leaves sizing out of the patch', () => {
+    const op = resizeOp(els, ['a'], { x: 10, y: 10, width: 100, height: 50 }, { x: 10, y: 10, width: 200, height: 100 })!;
+    expect((op.input as { set: Record<string, unknown> }).set['sizing']).toBeUndefined();
   });
 
   it('rotate adds the delta and wraps within range', () => {
@@ -165,5 +275,15 @@ describe('dispatchOp', () => {
     setOpSender(undefined);
     expect(sent).toEqual([{ type: 'op', gestureId: id, tool: 'openboard.element.delete', input: { ids: ['a'] } }]);
     expect(nextGestureId()).not.toBe(nextGestureId());
+  });
+});
+
+describe('iconCreateOp', () => {
+  it('centers a 24 by 24 icon with stroke width 2 on the click (Req 23.3)', () => {
+    const op = iconCreateOp('star', { x: 100, y: 50 });
+    expect(op.tool).toBe(TOOL_ELEMENT_CREATE);
+    expect((op.input as { elements: unknown[] }).elements).toEqual([
+      { type: 'icon', name: 'star', x: 88, y: 38, width: 24, height: 24, strokeWidth: 2 },
+    ]);
   });
 });

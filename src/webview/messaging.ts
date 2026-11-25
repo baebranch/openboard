@@ -3,6 +3,7 @@ import type { Viewport } from '../core/model/types';
 import type { HostToWebview, MessageValidators, RenderSpec, ViewCommandName, WebviewToHost } from '../shared/messages';
 import { createMessageValidation } from '../shared/messages';
 import type { WebviewStore } from './store';
+import { t } from './i18n/t';
 
 export interface VsCodeApi {
   postMessage(message: unknown): void;
@@ -13,6 +14,7 @@ export interface MessagingHandlers {
   onRenderRequest?(requestId: string, spec: RenderSpec): void;
   onPatchFailure?(): void;
   onViewCommand?(command: ViewCommandName): void;
+  onFonts?(families: string[]): void;
 }
 
 export interface Messaging {
@@ -69,13 +71,16 @@ export function createMessaging(
         handlers.onViewport?.(msg.viewport);
         break;
       case 'notice':
-        store.addNotice(msg.level, msg.message);
+        store.addNotice(msg.level, t(msg.message));
         break;
       case 'render:request':
         handlers.onRenderRequest?.(msg.requestId, msg.spec);
         break;
       case 'view:command':
         handlers.onViewCommand?.(msg.command);
+        break;
+      case 'fonts':
+        handlers.onFonts?.(msg.families);
         break;
     }
   }

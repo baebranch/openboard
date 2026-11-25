@@ -29,14 +29,35 @@
 }
 
 /* Floating panel layout over the canvas. */
+/* Tool palette: the tools, a divider, then the sidebar buttons, in one column. */
 .ob-app > .ob-palette {
   top: 12px;
   left: 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-height: calc(100vh - 24px);
   padding: 4px;
+  overflow-y: auto;
   border-radius: 6px;
+  scrollbar-width: none;
+}
+.ob-palette-tools,
+.ob-panel-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ob-palette-divider {
+  flex: none;
+  height: 1px;
+  margin: 4px 4px;
+  background: var(--ob-ui-border, #80808059);
+}
+/* The button of the open panel: a neutral tint, not the accent color. */
+.ob-panel-buttons button[aria-expanded='true'] {
+  color: var(--ob-toolbar-fg, #cccccc);
+  background: color-mix(in srgb, var(--ob-toolbar-fg, #cccccc) 20%, transparent);
 }
 
 .ob-app > .ob-export {
@@ -59,7 +80,7 @@
   top: var(--ob-properties-top);
   right: 12px;
   box-sizing: border-box;
-  width: 240px;
+  width: 264px;
   /* No minimap: use the full height. */
   max-height: calc(100vh - var(--ob-properties-top) - var(--ob-panel-gap));
   overflow: auto;
@@ -89,18 +110,196 @@
 .ob-properties form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-/* Short fields share a row (X | Y, Fill | Stroke, ...); a lone field takes the full width. */
-.ob-prop-row {
+/*
+ * Short fields share a row (X | Y, Fill | Stroke, ...); a lone field takes the full width.
+ * A grid gives every column the same width whatever its content, and `align-items: start` keeps
+ * labels on one line at the top, so the controls of a row line up with each other.
+ */
+.ob-prop-row,
+.ob-prop-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 8px;
+  row-gap: 10px;
+  align-items: start;
+}
+
+.ob-prop-row[data-cols='2'],
+.ob-prop-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.ob-prop-cell {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
-.ob-prop-row > .ob-prop {
+/* Labels stay on one line so a long one cannot push its control below its neighbour's.
+   The full text is in the `title` tooltip and the accessible name. */
+.ob-prop > label,
+.ob-prop-token-label,
+.ob-prop-sizing-label {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.92em;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+/* Every control in a field spans the column. */
+.ob-prop .ob-select,
+.ob-prop input[type='text'] {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* A checkbox field: label, then the box, aligned with the label start. */
+.ob-prop input[type='checkbox'] {
+  align-self: flex-start;
+  margin: 2px 0 0;
+}
+
+/* Token picker below a color/font/number field: label, then picker and detach button on one row. */
+.ob-prop-token {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 4px;
+}
+
+.ob-prop-token-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ob-prop-token-controls > .ob-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ob-prop-token-missing,
+.ob-prop-hint {
+  margin: 0;
+  font-size: 0.85em;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+/* Grouped controls (Corner radii, Image fill, Auto Layout, Sizing). */
+.ob-properties fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px 10px;
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  border-radius: 6px;
+}
+
+.ob-properties legend {
+  padding: 0 4px;
+  font-size: 0.92em;
+  font-weight: 600;
+}
+
+/* Rows of action buttons wrap instead of overflowing the panel. */
+.ob-prop-layout-actions,
+.ob-prop-image-fill-actions,
+.ob-prop-component-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Component section: same rhythm as the form below it. */
+.ob-prop-component {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0 0 12px;
+  border-bottom: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+
+.ob-prop-component-title {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.ob-prop-master-missing {
+  margin: 0;
+}
+
+/* "Overridden" status with its reset action, under the field it belongs to. */
+.ob-prop-override {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.85em;
+}
+
+.ob-prop-override button {
+  padding: 1px 8px;
+  font-size: inherit;
+}
+
+/* Sizing: a segmented control with rounded outer corners and shared inner borders.
+   Theme variables only (Req 26.5). */
+.ob-segmented {
+  display: flex;
+  min-width: 0;
+}
+
+.ob-properties .ob-segmented button {
   flex: 1 1 0;
   min-width: 0;
+  padding: 4px 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 0;
+  color: var(--vscode-button-secondaryForeground, inherit);
+  background: var(--vscode-button-secondaryBackground, transparent);
+  border: 1px solid var(--vscode-contrastBorder, var(--vscode-input-border, var(--ob-ui-border, #80808059)));
+}
+
+.ob-properties .ob-segmented button + button {
+  margin-left: -1px;
+}
+
+.ob-properties .ob-segmented button:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.ob-properties .ob-segmented button:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.ob-properties .ob-segmented button[aria-checked='true'] {
+  position: relative;
+  color: var(--vscode-button-foreground, var(--ob-button-fg, #ffffff));
+  background: var(--vscode-button-background, var(--ob-button-bg, #0e639c));
+}
+
+.ob-properties .ob-segmented button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 1px solid var(--ob-focus, var(--vscode-focusBorder, #007fd4));
+  outline-offset: 1px;
 }
 
 .ob-app > .ob-notices {
@@ -172,6 +371,28 @@
   position: relative;
 }
 
+/* Component_Master indicator: canvas-only, never part of an export (Req 13.5). */
+.ob-master-indicator {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 2px dashed var(--ob-focus, #3794ff);
+  pointer-events: none;
+}
+
+.ob-master-badge {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  transform-origin: 0 100%;
+  white-space: nowrap;
+  padding: 1px 6px;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--ob-bg, #1e1e1e);
+  background: var(--ob-focus, #3794ff);
+}
+
 .ob-handle {
   width: 8px;
   height: 8px;
@@ -180,8 +401,8 @@
   opacity: 0;
 }
 
+/* Connection dots: only while hovering a node (not for every selected one) or while connecting. */
 .react-flow__node:hover .ob-handle,
-.react-flow__node.selected .ob-handle,
 .react-flow__handle.connectingfrom,
 .react-flow__handle.connectingto {
   opacity: 1;
@@ -201,8 +422,8 @@
 }
 
 .ob-marquee {
-  fill: color-mix(in srgb, var(--ob-focus, #3794ff) 15%, transparent);
-  stroke: var(--ob-focus, #3794ff);
+  fill: color-mix(in srgb, var(--ob-sel, #1e8bff) 12%, transparent);
+  stroke: var(--ob-sel, #1e8bff);
   stroke-width: 1;
 }
 
@@ -219,12 +440,22 @@
   stroke: var(--vscode-errorForeground, #f14c4c);
 }
 
+/*
+ * Selection: a blue rectangle with square corner grab points and a size badge below it. Each side
+ * is an invisible resize strip; the rotation knob shows when the pointer is on the border. With
+ * several elements selected, each also gets a thin outline. The blue is fixed so it reads on light
+ * and dark canvases alike (theme focus colors can be near-white).
+ */
+.ob-canvas,
+.ob-selection {
+  --ob-sel: #1e8bff;
+}
+
 .ob-selection {
   position: absolute;
   z-index: 6;
   box-sizing: border-box;
-  /* Uses the text colour, so it always contrasts with the canvas background (light, dark, high contrast). */
-  border: 1px solid var(--ob-fg, #d4d4d4);
+  border: 1.5px solid var(--ob-sel);
   pointer-events: none;
 }
 
@@ -233,34 +464,97 @@
   position: absolute;
   box-sizing: border-box;
   pointer-events: auto;
-  background: var(--ob-bg, #1e1e1e);
-  border: 1px solid var(--ob-fg, #d4d4d4);
 }
 
-.ob-resize-handle {
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
+/* Corners: small squares, always shown. */
+.ob-h-nw,
+.ob-h-ne,
+.ob-h-se,
+.ob-h-sw {
+  z-index: 1;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  background: #ffffff;
+  border: 1.5px solid var(--ob-sel);
+  border-radius: 2px;
+}
+
+/* Sides: invisible strips along the border that resize along one axis. */
+.ob-h-n,
+.ob-h-s {
+  left: 0;
+  width: 100%;
+  height: 8px;
+  margin-top: -4px;
+}
+.ob-h-e,
+.ob-h-w {
+  top: 0;
+  width: 8px;
+  height: 100%;
+  margin-left: -4px;
 }
 
 .ob-rotate-handle {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   left: 50%;
-  top: -28px;
-  margin-left: -6px;
+  top: -24px;
+  margin-left: -5px;
+  background: #ffffff;
+  border: 1.5px solid var(--ob-sel);
   cursor: grab;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+/* The rotate knob appears when the pointer is on the box's border or corners. */
+.ob-selection:hover .ob-rotate-handle {
+  opacity: 1;
+}
+
+/* One outline per selected element, so an area selection shows what it picked. */
+.ob-selection-outline {
+  position: absolute;
+  z-index: 6;
+  box-sizing: border-box;
+  border: 1px solid var(--ob-sel);
+  pointer-events: none;
 }
 
 .ob-h-nw { left: 0; top: 0; cursor: nwse-resize; }
-.ob-h-n { left: 50%; top: 0; cursor: ns-resize; }
+.ob-h-n { top: 0; cursor: ns-resize; }
 .ob-h-ne { left: 100%; top: 0; cursor: nesw-resize; }
-.ob-h-e { left: 100%; top: 50%; cursor: ew-resize; }
+.ob-h-e { left: 100%; cursor: ew-resize; }
 .ob-h-se { left: 100%; top: 100%; cursor: nwse-resize; }
-.ob-h-s { left: 50%; top: 100%; cursor: ns-resize; }
+.ob-h-s { top: 100%; cursor: ns-resize; }
 .ob-h-sw { left: 0; top: 100%; cursor: nesw-resize; }
-.ob-h-w { left: 0; top: 50%; cursor: ew-resize; }
+.ob-h-w { left: 0; cursor: ew-resize; }
+
+/* "350 × 295" under the selection. */
+.ob-selection-size {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  padding: 1px 6px;
+  transform: translateX(-50%);
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: #ffffff;
+  background: var(--ob-sel);
+  border-radius: 4px;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+body.vscode-high-contrast .ob-selection,
+body.vscode-high-contrast-light .ob-selection {
+  --ob-sel: var(--ob-contrast-border, #f38518);
+}
 
 .ob-minimap {
   position: absolute;
@@ -290,15 +584,1033 @@
   stroke-width: 1.5;
 }
 
+/* Zoom controls: bottom right, just left of the minimap when it is shown. */
 .ob-zoom {
   position: absolute;
+  right: var(--ob-minimap-offset, 12px);
+  bottom: var(--ob-minimap-offset, 12px);
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  font-size: 12px;
+  color: var(--ob-toolbar-fg, var(--ob-panel-fg, #cccccc));
+  background: var(--ob-toolbar-bg, var(--ob-panel-bg, #252526));
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, rgba(128, 128, 128, 0.4));
+  border-radius: 6px;
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+.ob-zoom.ob-zoom-beside-minimap {
+  right: calc(var(--ob-minimap-offset, 12px) + var(--ob-minimap-width, 200px) + 8px);
+}
+.ob-zoom button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 4px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ob-zoom button:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.ob-zoom button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ob-zoom button:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+.ob-zoom .ob-zoom-level {
+  min-width: 48px;
+  font-variant-numeric: tabular-nums;
+}
+body.vscode-high-contrast .ob-zoom button,
+body.vscode-high-contrast-light .ob-zoom button {
+  border-color: var(--ob-contrast-border, #6fc3df);
+}
+
+/* Component panel control (below the tool palette's column) and the panel it opens. */
+.ob-app > .ob-palette-extra {
   left: 12px;
   bottom: 12px;
-  z-index: 7;
-  padding: 2px 8px;
-  font-size: 12px;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--ob-toolbar-fg, #cccccc);
+  background: var(--ob-toolbar-bg, #252526);
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+
+.ob-palette-extra button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  color: var(--ob-toolbar-fg, #cccccc);
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  cursor: pointer;
+}
+
+.ob-palette-extra button:hover {
+  background: color-mix(in srgb, var(--ob-toolbar-fg, #cccccc) 12%, transparent);
+}
+
+/* The button of the open panel: a neutral tint, not the accent color. */
+.ob-palette-extra button[aria-expanded='true'] {
+  color: var(--ob-toolbar-fg, #cccccc);
+  background: color-mix(in srgb, var(--ob-toolbar-fg, #cccccc) 20%, transparent);
+}
+
+/* Board panels toolbar: stacked like the tool palette above it. */
+.ob-app > .ob-palette-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ob-palette-extra button:focus-visible,
+.ob-components button:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+
+body.vscode-high-contrast .ob-palette-extra,
+body.vscode-high-contrast-light .ob-palette-extra,
+body.vscode-high-contrast .ob-palette-extra button,
+body.vscode-high-contrast-light .ob-palette-extra button,
+body.vscode-high-contrast .ob-components,
+body.vscode-high-contrast-light .ob-components {
+  border-color: var(--ob-contrast-border, #6fc3df);
+}
+
+.ob-app > .ob-components {
+  left: 56px;
+  bottom: 12px;
+  box-sizing: border-box;
+  width: 240px;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 6px;
   color: var(--ob-panel-fg, #cccccc);
   background: var(--ob-panel-bg, #252526);
-  border: 1px solid var(--ob-ui-border, rgba(128, 128, 128, 0.4));
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+
+.ob-components-title {
+  margin: 0 0 10px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.ob-components-empty {
+  margin: 0;
+}
+
+.ob-components-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each master is one full-width row button, styled like the tool palette buttons: transparent,
+   a subtle hover tint, no "selected" state. */
+.ob-components-list .ob-components-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 8px;
+  text-align: left;
+  color: var(--ob-toolbar-fg, var(--ob-panel-fg, #cccccc));
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ob-components-list .ob-components-item:hover {
+  background: color-mix(in srgb, var(--ob-toolbar-fg, #cccccc) 12%, transparent);
+}
+
+.ob-components-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Properties panel: sectioned layout (Position, Dimensions, Auto Layout, Appearance, Text, Fill,
+ * Stroke, ...), compact inputs with inline prefixes, icon rows, and a thin scrollbar.
+ * Theme variables only, with built-in dark fallbacks (Req 26.5).
+ * --------------------------------------------------------------------------------------------- */
+.ob-app > .ob-properties {
+  padding: 0;
+  font-family: var(--vscode-font-family, system-ui, -apple-system, 'Segoe UI', sans-serif);
+  font-size: 12px;
+  line-height: 1.4;
+  scrollbar-gutter: stable;
+}
+
+/* Thin, theme-colored scrollbars on the panel and its popups. */
+.ob-properties,
+.ob-components,
+.ob-icon-picker,
+.ob-prop-font-list,
+.ob-prop-icon-results,
+.ob-select-list {
+  scrollbar-color: var(--vscode-scrollbarSlider-background, rgba(121, 121, 121, 0.4)) transparent;
+}
+.ob-properties::-webkit-scrollbar,
+.ob-components::-webkit-scrollbar,
+.ob-icon-picker::-webkit-scrollbar,
+.ob-prop-font-list::-webkit-scrollbar,
+.ob-prop-icon-results::-webkit-scrollbar,
+.ob-select-list::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.ob-properties::-webkit-scrollbar-track,
+.ob-components::-webkit-scrollbar-track,
+.ob-icon-picker::-webkit-scrollbar-track,
+.ob-prop-font-list::-webkit-scrollbar-track,
+.ob-prop-icon-results::-webkit-scrollbar-track,
+.ob-select-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ob-properties::-webkit-scrollbar-thumb,
+.ob-components::-webkit-scrollbar-thumb,
+.ob-icon-picker::-webkit-scrollbar-thumb,
+.ob-prop-font-list::-webkit-scrollbar-thumb,
+.ob-prop-icon-results::-webkit-scrollbar-thumb,
+.ob-select-list::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--vscode-scrollbarSlider-background, rgba(121, 121, 121, 0.4));
+}
+.ob-properties::-webkit-scrollbar-thumb:hover,
+.ob-components::-webkit-scrollbar-thumb:hover,
+.ob-icon-picker::-webkit-scrollbar-thumb:hover,
+.ob-prop-font-list::-webkit-scrollbar-thumb:hover,
+.ob-prop-icon-results::-webkit-scrollbar-thumb:hover,
+.ob-select-list::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground, rgba(100, 100, 100, 0.7));
+}
+
+/* Visually hidden, still announced (labels of compact inputs, legends under a section title). */
+.ob-properties .ob-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ob-properties-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+.ob-properties-subtitle {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+}
+.ob-properties-empty {
+  padding: 12px;
+}
+.ob-properties form {
+  gap: 0;
+}
+
+/* Component section sits above the form with the same padding as a field section. */
+.ob-properties .ob-prop-component {
+  margin: 0;
+  padding: 10px 12px 12px;
+}
+
+/* Sections: a header row (title + optional actions) and a body; a hairline between sections. */
+.ob-prop-section {
+  padding: 4px 12px 12px;
+  border-bottom: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+.ob-prop-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 32px;
+}
+.ob-prop-section-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ob-properties .ob-prop-section-toggle {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: transparent;
+  border: 0;
+}
+.ob-properties .ob-prop-section-toggle:where(:hover:not(:disabled)) {
+  background: transparent;
+}
+.ob-prop-section-toggle .ob-panel-icon {
+  opacity: 0.6;
+  transition: transform 0.12s ease;
+}
+.ob-prop-section-toggle[aria-expanded='false'] .ob-panel-icon {
+  transform: rotate(-90deg);
+}
+.ob-prop-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ob-prop-section-body[hidden] {
+  display: none;
+}
+
+/* Field labels above controls: small and muted. */
+.ob-prop > label,
+.ob-prop-label,
+.ob-prop-token-label,
+.ob-prop-sizing-label {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+}
+.ob-prop {
+  gap: 4px;
+}
+
+/* Inputs, selects and the affix box share one look: 28px tall, rounded, no border until focus. */
+.ob-properties input[type='text'],
+.ob-properties .ob-select-button,
+.ob-input-affix {
+  min-height: 28px;
   border-radius: 6px;
+  color: var(--ob-input-fg, #cccccc);
+  background: var(--ob-input-bg, #3c3c3c);
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+}
+.ob-properties input[type='text']:hover,
+.ob-properties .ob-select-button:hover:not(:disabled),
+.ob-input-affix:hover {
+  border-color: var(--ob-ui-border, #80808059);
+}
+
+/* Affix: [prefix | input | suffix] in one box; the inner input is borderless. */
+.ob-input-affix {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+.ob-input-affix:focus-within {
+  border-color: var(--ob-focus, #007fd4);
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: -1px;
+}
+.ob-properties .ob-input-affix input[type='text'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 26px;
+  padding: 3px 8px 3px 4px;
+  background: transparent;
+  border: 0;
+  border-radius: 0 6px 6px 0;
+  outline: none;
+}
+.ob-properties .ob-input-affix input[type='text']:hover,
+.ob-properties .ob-prop .ob-input-affix input[type='text']:focus,
+.ob-properties .ob-prop .ob-input-affix input[type='text']:focus-visible {
+  border: 0;
+  outline: none;
+}
+.ob-input-prefix {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.6;
+  cursor: text;
+  user-select: none;
+}
+.ob-input-suffix {
+  display: inline-flex;
+  flex: none;
+  padding: 0 6px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Checkbox fields: box then label on one line. */
+.ob-prop-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.ob-prop-check > label {
+  font-size: 12px;
+  opacity: 0.9;
+}
+.ob-properties .ob-prop-check input[type='checkbox'] {
+  align-self: center;
+  margin: 0;
+}
+
+/* Color swatch at the start of a color input; the native color input covers it invisibly. */
+.ob-swatch {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 30%, transparent);
+}
+.ob-swatch[data-empty='true'] {
+  /* Theme default / unresolved: a small checkerboard. */
+  background: repeating-conic-gradient(color-mix(in srgb, currentColor 35%, transparent) 0% 25%, transparent 0% 50%) 50% / 8px 8px;
+}
+.ob-swatch input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.ob-swatch input[type='color']:disabled {
+  cursor: default;
+}
+.ob-swatch:focus-within {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+
+/* Icon rows: equal-width buttons in one rounded track; the selected one is raised. */
+.ob-properties .ob-segmented-icons {
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--ob-input-bg, #3c3c3c);
+}
+.ob-properties .ob-segmented-icons button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 2px 4px;
+  margin: 0;
+  font-size: 11px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  opacity: 0.75;
+}
+.ob-properties .ob-segmented-icons button + button {
+  margin-left: 0;
+}
+.ob-properties .ob-segmented-icons button:first-child,
+.ob-properties .ob-segmented-icons button:last-child {
+  border-radius: 4px;
+}
+.ob-properties .ob-segmented-icons button:hover:not(:disabled) {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.ob-properties .ob-segmented-icons button[aria-checked='true'] {
+  opacity: 1;
+  color: var(--ob-panel-fg, #cccccc);
+  background: color-mix(in srgb, var(--ob-panel-fg, #cccccc) 18%, var(--ob-panel-bg, #252526));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.ob-properties .ob-segmented-icons[data-mixed='true'] {
+  outline: 1px dashed color-mix(in srgb, currentColor 40%, transparent);
+  outline-offset: -1px;
+}
+
+/* Sizing (Fixed / Hug / Fill) uses the same track. */
+.ob-properties .ob-prop-sizing .ob-segmented {
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--ob-input-bg, #3c3c3c);
+}
+.ob-properties .ob-prop-sizing .ob-segmented button,
+.ob-properties .ob-prop-sizing .ob-segmented button:first-child,
+.ob-properties .ob-prop-sizing .ob-segmented button:last-child {
+  min-height: 24px;
+  margin: 0;
+  font-size: 11px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+.ob-properties .ob-prop-sizing .ob-segmented button[aria-checked='true'] {
+  color: var(--ob-panel-fg, #cccccc);
+  background: color-mix(in srgb, var(--ob-panel-fg, #cccccc) 18%, var(--ob-panel-bg, #252526));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Grouped controls inside a section are flat: the section already frames them. */
+.ob-prop-section fieldset {
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.ob-prop-section legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.7;
+}
+.ob-prop-section legend + * {
+  clear: both;
+}
+
+/* Token picker under a color/font field. */
+.ob-prop-token {
+  margin-top: 2px;
+}
+
+/* Font family combobox and its popup list. */
+.ob-prop-font {
+  position: relative;
+}
+.ob-prop-font-popup {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--ob-menu-fg, var(--ob-panel-fg, #cccccc));
+  background: var(--ob-menu-bg, var(--ob-panel-bg, #252526));
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+}
+.ob-prop-font-popup .ob-prop-hint {
+  padding: 2px 6px 4px;
+}
+.ob-prop-font-list {
+  max-height: 240px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.ob-prop-font-list li {
+  padding: 4px 8px;
+  overflow: hidden;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ob-prop-font-list li.is-active {
+  background: var(--ob-list-hover-bg, #2a2d2e);
+}
+.ob-prop-font-list li[aria-selected='true']:not(.is-active) {
+  color: var(--ob-list-active-fg, #ffffff);
+  background: var(--ob-list-active-bg, #04395e);
+}
+
+/* High contrast: every control keeps a visible border (Req 4.3). */
+body.vscode-high-contrast .ob-input-affix,
+body.vscode-high-contrast-light .ob-input-affix,
+body.vscode-high-contrast .ob-properties .ob-segmented-icons,
+body.vscode-high-contrast-light .ob-properties .ob-segmented-icons {
+  border: 1px solid var(--ob-contrast-border, #6fc3df);
+}
+body.vscode-high-contrast .ob-properties .ob-segmented-icons button[aria-checked='true'],
+body.vscode-high-contrast-light .ob-properties .ob-segmented-icons button[aria-checked='true'] {
+  outline: 1px solid var(--ob-focus, #f38518);
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Board panels (Layers, Slides, Components): one at a time beside the toolbar, full height, with a
+ * fixed title, a scrolling body and (Slides) a fixed footer.
+ * --------------------------------------------------------------------------------------------- */
+/* The sidebar is pinned to the top and runs the full height, so filtering a list never moves its
+   title or search field, and results always start at the top. */
+.ob-app > .ob-board-panel {
+  display: flex;
+  flex-direction: column;
+  top: 12px;
+  bottom: 12px;
+  left: 56px;
+  width: 264px;
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--vscode-font-family, system-ui, -apple-system, 'Segoe UI', sans-serif);
+  font-size: 12px;
+}
+.ob-board-panel .ob-components-title {
+  flex: none;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+.ob-board-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 6px;
+  overflow-y: auto;
+  scrollbar-color: var(--vscode-scrollbarSlider-background, rgba(121, 121, 121, 0.4)) transparent;
+}
+.ob-board-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+.ob-board-panel-body::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--vscode-scrollbarSlider-background, rgba(121, 121, 121, 0.4));
+}
+.ob-board-panel .ob-components-empty {
+  padding: 6px;
+  opacity: 0.8;
+}
+
+/* Preview boxes: the rendered frame, letterboxed on a faint checkerboard-free backdrop. */
+.ob-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ob-panel-fg, #cccccc) 6%, transparent);
+}
+.ob-thumb img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Component cards: name over the preview. */
+.ob-components-list .ob-components-item.ob-components-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px 8px 8px;
+}
+.ob-components-card .ob-thumb {
+  height: 96px;
+}
+
+/* Layers: compact rows with an expand toggle, a type icon and the name. */
+.ob-layer-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ob-layer-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 26px;
+  border-radius: 4px;
+}
+.ob-layer-row:hover {
+  background: color-mix(in srgb, var(--ob-panel-fg, #cccccc) 8%, transparent);
+}
+.ob-layer-row[data-selected='true'] {
+  background: color-mix(in srgb, var(--ob-focus, #007fd4) 28%, transparent);
+}
+.ob-components .ob-layer-toggle,
+.ob-components .ob-layer-item {
+  color: inherit;
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ob-components .ob-layer-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 22px;
+  padding: 0;
+  opacity: 0.7;
+}
+.ob-layer-toggle .ob-icon {
+  transition: transform 0.12s ease;
+}
+.ob-layer-toggle[aria-expanded='true'] .ob-icon {
+  transform: rotate(90deg);
+}
+.ob-layer-toggle-spacer {
+  flex: none;
+  width: 18px;
+}
+.ob-components .ob-layer-item {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 24px;
+  padding: 2px 6px;
+  font: inherit;
+  text-align: left;
+}
+.ob-layer-item .ob-icon {
+  flex: none;
+  opacity: 0.75;
+}
+.ob-layer-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Masters and instances stand out like in design tools. */
+.ob-layer-row[data-kind='master'],
+.ob-layer-row[data-kind='instance'] {
+  color: var(--vscode-symbolIcon-classForeground, #b180d7);
+}
+.ob-layer-row[data-kind='master'] .ob-layer-name {
+  font-weight: 600;
+}
+.ob-components .ob-layer-toggle:focus-visible,
+.ob-components .ob-layer-item:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: -1px;
+}
+
+/* Slides: numbered preview cards and a fixed footer. */
+.ob-slide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ob-components .ob-slide-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 6px;
+  color: inherit;
+  text-align: left;
+  background: color-mix(in srgb, var(--ob-panel-fg, #cccccc) 4%, transparent);
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ob-components .ob-slide-card:hover {
+  background: color-mix(in srgb, var(--ob-panel-fg, #cccccc) 10%, transparent);
+}
+.ob-components .ob-slide-card[aria-current='true'] {
+  border-color: var(--ob-focus, #007fd4);
+}
+.ob-components .ob-slide-card:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+.ob-slide-number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ob-panel-fg, #cccccc);
+  background: color-mix(in srgb, var(--ob-panel-bg, #252526) 85%, transparent);
+  border-radius: 10px;
+}
+.ob-slide-thumb {
+  width: 100%;
+  max-height: 180px;
+}
+.ob-slide-name {
+  overflow: hidden;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+.ob-slides-footer {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  padding: 8px;
+  border-top: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+.ob-components .ob-slides-footer button {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 10px;
+  font: inherit;
+  color: var(--ob-toolbar-fg, var(--ob-panel-fg, #cccccc));
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ob-components .ob-slides-footer button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ob-toolbar-fg, #cccccc) 12%, transparent);
+}
+.ob-components .ob-slides-footer button:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+/* "Include components" sits above the buttons. */
+.ob-slides-options {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 0;
+  border-top: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+.ob-slides-options input[type='checkbox'] {
+  margin: 0;
+}
+.ob-slides-options + .ob-slides-footer {
+  border-top: 0;
+}
+.ob-components .ob-slides-footer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Presentation mode: every toolbar and panel is hidden (and out of the tab order); one slide fills
+ * the window with a small control bar that fades when the pointer rests.
+ * --------------------------------------------------------------------------------------------- */
+.ob-app.ob-presenting > :not(.ob-presentation) {
+  visibility: hidden;
+}
+.ob-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ob-app > .ob-presentation,
+.ob-presentation {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  color: var(--ob-panel-fg, #cccccc);
+  outline: none;
+  font-family: var(--vscode-font-family, system-ui, -apple-system, 'Segoe UI', sans-serif);
+  font-size: 13px;
+}
+.ob-presentation[data-idle='true'] {
+  cursor: none;
+}
+.ob-presentation-stage {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 24px;
+  cursor: pointer;
+}
+.ob-presentation[data-idle='true'] .ob-presentation-stage {
+  cursor: none;
+}
+.ob-presentation-stage img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+.ob-presentation-controls {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 32px);
+  padding: 4px 6px;
+  transform: translateX(-50%);
+  background: var(--ob-toolbar-bg, var(--ob-panel-bg, #252526));
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  border-radius: 8px;
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
+  transition: opacity 0.2s ease;
+}
+.ob-presentation[data-idle='true'] .ob-presentation-controls:not(:focus-within) {
+  opacity: 0;
+}
+.ob-presentation-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ob-presentation-controls button:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.ob-presentation-controls button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ob-presentation-controls button:focus-visible,
+.ob-presentation-counter input:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+.ob-presentation-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+.ob-presentation-counter input {
+  box-sizing: content-box;
+  padding: 3px 4px;
+  font: inherit;
+  text-align: center;
+  color: var(--ob-input-fg, #cccccc);
+  background: var(--ob-input-bg, #3c3c3c);
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 4px;
+}
+.ob-presentation-title {
+  max-width: 240px;
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+body.vscode-high-contrast .ob-presentation-controls button,
+body.vscode-high-contrast-light .ob-presentation-controls button {
+  border-color: var(--ob-contrast-border, #6fc3df);
+}
+
+/* Layers search: one rounded field under the title. */
+.ob-layer-search {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 8px 2px;
+  padding: 0 8px;
+  min-height: 28px;
+  color: var(--ob-input-fg, #cccccc);
+  background: var(--ob-input-bg, #3c3c3c);
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 6px;
+}
+.ob-layer-search:focus-within {
+  border-color: var(--ob-focus, #007fd4);
+}
+.ob-layer-search .ob-icon {
+  flex: none;
+  opacity: 0.6;
+}
+.ob-layer-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+body.vscode-high-contrast .ob-layer-search,
+body.vscode-high-contrast-light .ob-layer-search {
+  border-color: var(--ob-contrast-border, #6fc3df);
 }

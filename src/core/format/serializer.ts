@@ -1,5 +1,6 @@
 import type { Asset, BoardDocument, Element, LibraryComponent } from '../model/types';
 import { sha256OfBase64 } from './sha256';
+import { effectiveSchemaVersion } from './schema-version';
 
 /** Canonical JSON: sorted keys at every level, 2-space indent, `\n` endings, trailing newline. */
 export function canonicalStringify(value: unknown): string {
@@ -64,10 +65,17 @@ function assetHash(a: Asset): string {
 
 function mapElementAssets(els: Element[], remap: Map<string, string>, used: Set<string>): Element[] {
   return els.map((el) => {
-    if (el.type !== 'image') return el;
-    const id = remap.get(el.assetId) ?? el.assetId;
+    let out: Element = el;
+    const fill = el.style?.imageFill;
+    if (fill) {
+      const fid = remap.get(fill.assetId) ?? fill.assetId;
+      used.add(fid);
+      if (fid !== fill.assetId) out = { ...el, style: { ...el.style, imageFill: { ...fill, assetId: fid } } } as Element;
+    }
+    if (out.type !== 'image') return out;
+    const id = remap.get(out.assetId) ?? out.assetId;
     used.add(id);
-    return id === el.assetId ? el : { ...el, assetId: id };
+    return id === out.assetId ? out : { ...out, assetId: id };
   });
 }
 
@@ -101,5 +109,5 @@ function normalizeAssets(doc: BoardDocument): {
 /** Serializes a Board_Document to canonical UTF-8 JSON text. */
 export function serialize(doc: BoardDocument): string {
   const { assets, elements, library } = normalizeAssets(doc);
-  return canonicalStringify(flatten({ ...doc, assets, elements, library }));
+  return canonicalStringify(flatten({ ...doc, schemaVersion: effectiveSchemaVersion(doc), assets, elements, library }));
 }

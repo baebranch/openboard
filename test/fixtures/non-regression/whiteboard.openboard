@@ -1,0 +1,98 @@
+{
+    "schemaVersion": 1,
+    "meta": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "title": "00000000-0000-4000-8000-000000000001",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "modifiedAt": "2024-01-01T00:00:00.000Z"
+    },
+    "viewport": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+    },
+    "elements": [
+        {
+            "id": "a1",
+            "type": "freehand",
+            "x": 10,
+            "y": 10,
+            "width": 100,
+            "height": 60,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "points": [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "p": 0.5
+                },
+                {
+                    "x": 40,
+                    "y": 30,
+                    "p": 0.8
+                },
+                {
+                    "x": 100,
+                    "y": 60
+                }
+            ],
+            "baseWidth": 3
+        },
+        {
+            "id": "a2",
+            "type": "text",
+            "x": 150,
+            "y": 20,
+            "width": 200,
+            "height": 30,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "runs": [
+                {
+                    "text": "Hello whiteboard"
+                },
+                {
+                    "text": " bold",
+                    "bold": true
+                }
+            ],
+            "fontFamily": "sans-serif",
+            "fontSize": 16,
+            "align": "left"
+        },
+        {
+            "id": "a3",
+            "type": "rectangle",
+            "x": 20,
+            "y": 120,
+            "width": 120,
+            "height": 80,
+            "rotation": 0,
+            "style": {
+                "fill": "#ffcc00",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 8
+            }
+        }
+    ],
+    "assets": [],
+    "library": []
+}

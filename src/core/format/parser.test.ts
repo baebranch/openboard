@@ -60,9 +60,13 @@ describe('parse', () => {
     expect(!missing.ok && missing.kind === 'schema' && missing.path).toBe('/viewport');
   });
 
-  it('does not report migratedFrom when no migration ran, and rejects gaps in the chain', () => {
+  it('migrates version 1 to 2 in memory, reports no migration at the current version, and rejects gaps', () => {
     const r = parse(JSON.stringify(board()));
-    expect(r.ok && r.migratedFrom).toBeUndefined();
+    expect(r.ok && r.migratedFrom).toBe(1);
+    expect(r.ok && r.doc.schemaVersion).toBe(2);
+    const current = parse(JSON.stringify(board({ schemaVersion: 2 })));
+    expect(current.ok && current.migratedFrom).toBeUndefined();
+    expect(JSON.parse(serialize((r as { doc: Parameters<typeof serialize>[0] }).doc)).schemaVersion).toBe(1);
     const gap = parse(JSON.stringify(board({ schemaVersion: 0 })), { migrations: new MigrationRegistry([]) });
     expect(gap.ok).toBe(false);
   });

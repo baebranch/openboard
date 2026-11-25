@@ -7,8 +7,11 @@ import {
   createFrameFromPreset,
   createShapeFromDrag,
   elementToDeleteOnTextEditExit,
+  frameNestingDepth,
+  frameNestingProblem,
   moveFramePatches,
   resizeBounds,
+  wouldCreateFrameCycle,
 } from './shapes';
 
 const style = { fill: 'theme:default', stroke: 'theme:default', strokeWidth: 1, strokeStyle: 'solid', opacity: 100, cornerRadius: 0 } as const;
@@ -64,6 +67,29 @@ describe('frames', () => {
     const made = createFrameFromPreset('phone', { x: 1, y: 2 }, [], 'p');
     expect(made?.frame).toMatchObject({ x: 1, y: 2, width: 390, height: 844, preset: 'phone' });
     expect(createFrameFromPreset('nope', { x: 0, y: 0 }, [])).toBeUndefined();
+  });
+});
+
+describe('frame nesting guards', () => {
+  const fr = (id: string, parentId?: string): Element =>
+    ({ ...(rect(id, 0, 0, 10, 10, parentId) as object), type: 'frame' }) as unknown as Element;
+  const els = [fr('a'), fr('b', 'a'), fr('c', 'b'), rect('r', 0, 0, 1, 1, 'c')];
+
+  it('computes 1-based depth', () => {
+    expect(frameNestingDepth('a', els)).toBe(1);
+    expect(frameNestingDepth('c', els)).toBe(3);
+  });
+
+  it('detects cycles', () => {
+    expect(wouldCreateFrameCycle('a', 'c', els)).toBe(true);
+    expect(wouldCreateFrameCycle('a', 'a', els)).toBe(true);
+    expect(wouldCreateFrameCycle('c', 'a', els)).toBe(false);
+  });
+
+  it('reports non-frame parents and existing cycles', () => {
+    expect(frameNestingProblem(els, ['c'])).toBeUndefined();
+    expect(frameNestingProblem([...els, rect('x', 0, 0, 1, 1, 'r')], ['x'])).toMatch(/not an existing Frame/);
+    expect(frameNestingProblem([fr('p', 'q'), fr('q', 'p')], ['p'])).toMatch(/own ancestor/);
   });
 });
 

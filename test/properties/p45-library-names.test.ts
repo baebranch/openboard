@@ -17,6 +17,10 @@ const BUILTIN_IDS = [
   ['input field', 'builtin:input-field'],
   ['card', 'builtin:card'],
   ['navigation bar', 'builtin:navigation-bar'],
+  ['checkbox', 'builtin:checkbox'],
+  ['toggle', 'builtin:toggle'],
+  ['avatar', 'builtin:avatar'],
+  ['badge', 'builtin:badge'],
   ['device outline', 'builtin:device-outline'],
 ] as const;
 
@@ -87,7 +91,8 @@ describe('Feature: openboard, Property 45: Component library names', () => {
         const out = (await r.registry.invoke('openboard.library.insert', { component: id })) as Err & { ids?: string[] };
         expect(out.error).toBeUndefined();
         expect(out.ids!.length).toBeGreaterThan(0);
-        expect(r.model.getDocument().elements.length).toBe(count + out.ids!.length);
+        // Built-in masters also gain derived Instance_Children, which the returned ids omit.
+        expect(r.model.getDocument().elements.length).toBeGreaterThanOrEqual(count + out.ids!.length);
       }),
       { numRuns: 100 },
     );

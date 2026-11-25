@@ -31,7 +31,11 @@ export interface DialogState {
   paddingText: string;
   background: ExportBackground;
   matchTheme: boolean;
+  /** Token mode to export in (Req 12.5); `active` follows the board's stored mode. */
+  tokenMode: 'active' | 'light' | 'dark';
   embedBoard: boolean;
+  /** Omit Component_Masters from the output (Req 17.1); off on every export initiation. */
+  excludeMasters: boolean;
 }
 
 export const initialDialogState = (): DialogState => ({
@@ -43,7 +47,9 @@ export const initialDialogState = (): DialogState => ({
   paddingText: String(DEFAULT_EXPORT_OPTIONS.padding),
   background: DEFAULT_EXPORT_OPTIONS.background,
   matchTheme: false,
+  tokenMode: 'active',
   embedBoard: false,
+  excludeMasters: false,
 });
 
 /** Parses the padding field; an invalid entry keeps the previous value and reports the range (Req 12.6). */
@@ -91,7 +97,9 @@ export function buildOptions(state: DialogState, selection: readonly ElementId[]
     background: !supportsTransparency(state.format) && state.background === 'transparent' ? 'white' : state.background,
     matchTheme: state.matchTheme,
   };
+  if (state.tokenMode !== 'active') opts.tokenMode = state.tokenMode;
   if (state.format === 'png' && state.embedBoard) opts.embedBoard = true;
+  if (state.excludeMasters) opts.excludeMasters = true;
   return opts;
 }
 
@@ -107,7 +115,7 @@ export interface Preview {
 export function previewExport(doc: Pick<BoardDocument, 'elements'>, opts: ExportOptions): Preview {
   const regions: ExportOptions[] =
     opts.scope.kind === 'allFrames'
-      ? selectFrameScopes(doc).map(({ frame }) => ({ ...opts, scope: { kind: 'frame', id: frame.id } as ExportScope }))
+      ? selectFrameScopes(doc, { excludeMasters: opts.excludeMasters === true }).map(({ frame }) => ({ ...opts, scope: { kind: 'frame', id: frame.id } as ExportScope }))
       : [opts];
   if (regions.length === 0) return { ok: false, sizes: [], error: EMPTY_SCOPE_MESSAGE };
   const sizes: { w: number; h: number }[] = [];
@@ -138,7 +146,9 @@ export function toToolInput(opts: ExportOptions): Record<string, unknown> {
   };
   if (opts.scope.kind === 'selection') input['ids'] = [...opts.scope.ids];
   if (opts.scope.kind === 'frame') input['frameId'] = opts.scope.id;
+  if (opts.tokenMode && opts.tokenMode !== 'active') input['tokenMode'] = opts.tokenMode;
   if (opts.embedBoard) input['embedBoard'] = true;
+  if (opts.excludeMasters) input['excludeMasters'] = true;
   return input;
 }
 

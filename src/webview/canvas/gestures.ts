@@ -4,9 +4,10 @@
  * `openboard.batch` so they stay one undo entry.
  */
 import { unionBounds } from '../../core/model/geometry';
-import { clamp, COORD_RANGE, MIN_SIZE, round2, ROTATION_RANGE } from '../../core/model/ranges';
+import { clamp, COORD_RANGE, maxCornerRadius, MIN_SIZE, round2, ROTATION_RANGE } from '../../core/model/ranges';
 import type { Bounds, Element, ElementId, FreehandPoint, Point } from '../../core/model/types';
 import { finalizeStroke, type StrokePoint } from '../../core/freehand';
+import { frameNestingProblem, wouldCreateFrameCycle } from '../../core/shapes/shapes';
 import { snapToGrid } from '../../core/snap';
 import type { ToolId } from '../uiState';
 
@@ -77,6 +78,106 @@ export function movePatches(
 /** Move the elements by (dx, dy); undefined when nothing moves. */
 export function moveOp(elements: readonly Element[], ids: readonly ElementId[], dx: number, dy: number): Op | undefined {
   return updateOps(movePatches(elements, ids, dx, dy));
+}
+
+// --- drop onto a Frame (Req 21.4) -------------------------------------------------------------------
+
+/**
+ * What kind of container an element is for drops: 'layout' for a Layout_Frame (a Frame with `layout`),
+ * 'frame' for any other Frame. The Layout_Pass orders a Layout_Frame's children by their main-axis
+ * center (Req 19.2), so dropping or dragging a child to a new position IS the reorder; the host runs the
+ * pass inside the same transaction as the move, giving one Undo_History entry (Req 19.11, 19.15).
+ */
+export type DropContainerKind = 'frame' | 'layout';
+
+export function dropContainerKind(el: Element): DropContainerKind | undefined {
+  if (el.type !== 'frame') return undefined;
+  return el.layout !== undefined ? 'layout' : 'frame';
+}
+
+/**
+ * Index at which an element whose main-axis center is `center` lands among the arranged children of
+ * Layout_Frame `frame` (excluding `exclude`): the count of siblings whose center is strictly smaller,
+ * matching the Layout_Pass ordering (ties keep the stored order, so the newcomer goes after them).
+ */
+export function layoutInsertionIndex(
+  elements: readonly Element[],
+  frame: Element,
+  center: number,
+  exclude: ReadonlySet<ElementId> = new Set(),
+): number {
+  if (frame.type !== 'frame' || frame.layout === undefined) return 0;
+  const vertical = frame.layout.direction === 'vertical';
+  return elements.filter((e) => {
+    if (e.parentId !== frame.id || e.type === 'edge' || e.ignoreLayout === true || exclude.has(e.id)) return false;
+    const c = vertical ? e.y + e.height / 2 : e.x + e.width / 2;
+    return c <= center;
+  }).length;
+}
+
+function containsPoint(el: Element, p: Point): boolean {
+  return p.x >= el.x && p.x <= el.x + el.width && p.y >= el.y && p.y <= el.y + el.height;
+}
+
+/** Dragged ids whose ancestors are not also dragged; descendants of a dragged Frame keep their parent. */
+function dropRoots(elements: readonly Element[], ids: readonly ElementId[]): ElementId[] {
+  const byId = new Map(elements.map((e) => [e.id, e]));
+  const idSet = new Set(ids);
+  return ids.filter((id) => {
+    const seen = new Set<ElementId>([id]);
+    for (let cur = byId.get(id)?.parentId; cur !== undefined; cur = byId.get(cur)?.parentId) {
+      if (seen.has(cur)) break;
+      if (idSet.has(cur)) return false;
+      seen.add(cur);
+    }
+    return true;
+  });
+}
+
+/**
+ * The topmost Frame under `point` that can accept every dragged root: not itself dragged, not inside a
+ * dragged element, and without creating a cycle or exceeding the nesting depth. Undefined when none.
+ */
+export function findDropTarget(elements: readonly Element[], ids: readonly ElementId[], point: Point): Element | undefined {
+  const roots = dropRoots(elements, ids);
+  if (roots.length === 0) return undefined;
+  const dragged = new Set(ids);
+  for (let i = elements.length - 1; i >= 0; i--) {
+    const cand = elements[i]!;
+    if (dropContainerKind(cand) === undefined || dragged.has(cand.id) || !containsPoint(cand, point)) continue;
+    const ok = roots.every((id) => !wouldCreateFrameCycle(id, cand.id, elements));
+    if (!ok) continue;
+    const next = elements.map((e) => (roots.includes(e.id) ? { ...e, parentId: cand.id } : e)) as Element[];
+    if (frameNestingProblem(next, roots) !== undefined) continue;
+    return cand;
+  }
+  return undefined;
+}
+
+/**
+ * One op that moves the selection by (dx, dy) and, when `target` is given, sets it as `parentId` of each
+ * dropped root (Frames included). Locked elements are skipped like in a move. One op = one undo entry.
+ * For a Layout_Frame target the moved position determines the insertion index; the Layout_Pass reflow
+ * runs in the same transaction as this op, so move, reorder and reflow are one entry (Req 19.11).
+ */
+export function dropOp(
+  elements: readonly Element[],
+  ids: readonly ElementId[],
+  dx: number,
+  dy: number,
+  target: Element | undefined,
+): Op | undefined {
+  const patches = movePatches(elements, ids, dx, dy);
+  if (!target) return updateOps(patches);
+  const roots = new Set(dropRoots(elements, ids));
+  const byId = new Map(elements.map((e) => [e.id, e]));
+  const out = patches.map((p) => (roots.has(p.id) ? { id: p.id, set: { ...p.set, parentId: target.id } } : p));
+  for (const id of roots) {
+    const el = byId.get(id);
+    if (!el || el.type === 'edge' || el.locked || el.parentId === target.id || out.some((p) => p.id === id)) continue;
+    out.push({ id, set: { parentId: target.id } });
+  }
+  return updateOps(out);
 }
 
 function shiftPoint(pt: FreehandPoint, dx: number, dy: number): FreehandPoint {
@@ -166,6 +267,20 @@ export function scalePatches(
       const set: Patch = { x: coord(mapX(e.x)), y: coord(mapY(e.y)), width: size(e.width * sx), height: size(e.height * sy) };
       if (e.type === 'freehand') {
         set['points'] = e.points.map((p) => ({ ...p, x: round2(mapX(p.x)), y: round2(mapY(p.y)) }));
+      }
+      // Req 6.9: keep per-corner radii within half the new shorter side, in the same op as the resize.
+      const radii = (e.style as { cornerRadii?: readonly number[] } | undefined)?.cornerRadii;
+      if (radii) {
+        const max = maxCornerRadius(set['width'] as number, set['height'] as number);
+        if (radii.some((r) => r > max)) set['cornerRadii'] = radii.map((r) => Math.min(r, max));
+      }
+      // Req 20.10: resizing a `hug` axis writes the chosen size and switches that axis to `fixed`.
+      const sizing = e.sizing;
+      if (sizing && ((sizing.width === 'hug' && set['width'] !== e.width) || (sizing.height === 'hug' && set['height'] !== e.height))) {
+        set['sizing'] = {
+          width: sizing.width === 'hug' && set['width'] !== e.width ? 'fixed' : sizing.width,
+          height: sizing.height === 'hug' && set['height'] !== e.height ? 'fixed' : sizing.height,
+        };
       }
       return { id: e.id, set };
     });
@@ -272,6 +387,24 @@ export function createOp(tool: DrawTool, g: Bounds & { rotation: number }): Op {
   if (g.rotation) el['rotation'] = g.rotation;
   if (tool === 'frame') el['name'] = 'Frame';
   if (tool === 'text' || tool === 'sticky') el['text'] = '';
+  return { tool: TOOL_ELEMENT_CREATE, input: { elements: [el] } };
+}
+
+export const ICON_DEFAULT_SIZE = 24;
+export const ICON_DEFAULT_STROKE_WIDTH = 2;
+
+/** Icon tool click -> one create op for a 24 by 24 icon centered on `at` (Req 23.3). */
+export function iconCreateOp(name: string, at: Point): Op {
+  const half = ICON_DEFAULT_SIZE / 2;
+  const el = {
+    type: 'icon',
+    name,
+    x: coord(at.x - half),
+    y: coord(at.y - half),
+    width: ICON_DEFAULT_SIZE,
+    height: ICON_DEFAULT_SIZE,
+    strokeWidth: ICON_DEFAULT_STROKE_WIDTH,
+  };
   return { tool: TOOL_ELEMENT_CREATE, input: { elements: [el] } };
 }
 

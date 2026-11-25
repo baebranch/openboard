@@ -1,3 +1,4 @@
+import { t } from '../i18n/t';
 import type { ToolId } from '../uiState';
 
 export interface PaletteTool {
@@ -6,7 +7,7 @@ export interface PaletteTool {
   shortcut: string;
 }
 
-/** The 13 palette tools in display order. Labels are unique and non-empty. */
+/** The 14 palette tools in display order. Labels are unique and non-empty. */
 export const PALETTE_TOOLS: readonly PaletteTool[] = [
   { id: 'select', label: 'Select', shortcut: 'V' },
   { id: 'hand', label: 'Hand', shortcut: 'H' },
@@ -21,6 +22,7 @@ export const PALETTE_TOOLS: readonly PaletteTool[] = [
   { id: 'frame', label: 'Frame', shortcut: 'F' },
   { id: 'sticky', label: 'Sticky Note', shortcut: 'S' },
   { id: 'eraser', label: 'Eraser', shortcut: 'E' },
+  { id: 'icon', label: t('Icon'), shortcut: 'K' },
 ];
 
 /** Roving-tabindex focus target after an arrow/Home/End key; undefined when the key is not handled. */

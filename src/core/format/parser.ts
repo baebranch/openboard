@@ -1,4 +1,5 @@
-import type { BoardDocument, ExtraBag } from '../model/types';
+import type { BoardDocument, ElementType, ExtraBag } from '../model/types';
+import { documentFields, fieldsFor } from '../model/mockup-fields';
 import { CURRENT_SCHEMA_VERSION } from '../model/ranges';
 import { newId } from '../model/ids';
 import { defaultMigrationRegistry, type MigrationRegistry, type RawDoc } from './migrations';
@@ -196,8 +197,11 @@ const list = (f: (v: unknown) => unknown) => (v: unknown) => (Array.isArray(v) ?
 const obj = (known: readonly string[], children?: Record<string, (v: unknown) => unknown>) => (v: unknown) =>
   isObj(v) ? split(v, known, children) : v;
 
-const STYLE_KEYS = ['fill', 'stroke', 'strokeWidth', 'strokeStyle', 'opacity', 'cornerRadius'];
-const BASE_KEYS = ['id', 'type', 'x', 'y', 'width', 'height', 'rotation', 'parentId', 'locked', 'groupId', 'style'];
+const STYLE_KEYS = ['fill', 'stroke', 'strokeWidth', 'strokeStyle', 'opacity', 'cornerRadius', ...fieldsFor('style')];
+const BASE_KEYS = [
+  'id', 'type', 'x', 'y', 'width', 'height', 'rotation', 'parentId', 'locked', 'groupId', 'style',
+  ...fieldsFor('base'),
+];
 const TEXT_KEYS = ['runs', 'fontFamily', 'fontSize', 'align'];
 const TYPE_KEYS: Record<string, string[]> = {
   freehand: ['points', 'baseWidth'],
@@ -215,7 +219,7 @@ const points = list(obj(['x', 'y', 'p']));
 function element(v: unknown): unknown {
   if (!isObj(v)) return v;
   const type = typeof v['type'] === 'string' ? v['type'] : '';
-  const known = [...BASE_KEYS, ...(TYPE_KEYS[type] ?? [])];
+  const known = [...BASE_KEYS, ...(TYPE_KEYS[type] ?? []), ...fieldsFor('type', type as ElementType)];
   return split(v, known, {
     style: obj(STYLE_KEYS),
     runs,
@@ -228,13 +232,20 @@ const elements = list(element);
 
 /** Splits unknown properties into `extra` bags at every level of a validated raw document. */
 export function attachExtras(raw: RawDoc): BoardDocument {
-  const out = split(raw, ['schemaVersion', 'meta', 'viewport', 'elements', 'assets', 'library', 'settings'], {
+  const rootKeys = ['schemaVersion', 'meta', 'viewport', 'elements', 'assets', 'library', 'settings', ...documentFields()];
+  const out = split(raw, rootKeys, {
+    tokens: obj(['colors', 'fonts', 'numbers']),
     meta: obj(['id', 'title', 'createdAt', 'modifiedAt', 'generator']),
     viewport: obj(['x', 'y', 'zoom']),
     elements,
     assets: list(obj(['id', 'mime', 'hash', 'width', 'height', 'data'])),
-    library: list(obj(['id', 'name', 'elements', 'builtin'], { elements })),
-    settings: obj(['grid', 'minimap'], { grid: obj(['enabled', 'spacing']) }),
+    library: list(
+      obj(['id', 'name', 'elements', 'builtin', 'tokens'], {
+        elements,
+        tokens: obj(['colors', 'fonts', 'numbers']),
+      }),
+    ),
+    settings: obj(['grid', 'minimap', 'activeMode'], { grid: obj(['enabled', 'spacing']) }),
   });
   return out as unknown as BoardDocument;
 }

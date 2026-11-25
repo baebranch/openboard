@@ -57,6 +57,7 @@ const CASES: Record<ElementType, Case> = {
   frame: { companions: [], create: { type: 'frame', ...box, name: 'My Frame' }, set: { name: 'Renamed' }, check: (e) => (e as { name: string }).name, expected: 'Renamed', svgMarker: 'My Frame' },
   sticky: { companions: [], create: { type: 'sticky', ...box, text: 'Sticky note' }, set: { text: 'Changed note' }, check: (e) => (e as { runs: { text: string }[] }).runs[0]?.text, expected: 'Changed note', svgMarker: 'Sticky note' },
   flowNode: { companions: [], create: { type: 'flowNode', ...box, text: 'Step one', preset: 'decision' }, set: { preset: 'process' }, check: (e) => (e as { preset: string }).preset, expected: 'process', svgMarker: 'Step one' },
+  icon: { companions: [], create: { type: 'icon', ...box, name: 'check' }, set: { name: 'unknown-glyph' }, check: (e) => (e as { name: string }).name, expected: 'unknown-glyph', svgMarker: 'data-id' },
   edge: {
     companions: [
       { id: 'src', type: 'rectangle', x: 0, y: 0, width: 50, height: 50 },
@@ -123,7 +124,8 @@ describe.each(ELEMENT_TYPES.map((t) => [t] as const))('%s element', (type) => {
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
     expect(parsed.readOnly).toBe(false);
-    expect(parsed.doc).toEqual(doc);
+        // The parser migrates version 1 to 2 in memory (Req 3.5); everything else is unchanged.
+    expect(parsed.doc).toEqual({ ...doc, schemaVersion: 2 });
     expect(serialize(parsed.doc)).toBe(text);
   });
 

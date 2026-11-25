@@ -172,6 +172,10 @@ export function arbElement(type: ElementType, id = 'el-0'): fc.Arbitrary<Element
       return fc
         .tuple(base, fc.string({ maxLength: 30 }))
         .map(([b, name]) => ({ ...b, type: 'frame', name }) as Element);
+    case 'icon':
+      return fc
+        .tuple(base, fc.string({ minLength: 1, maxLength: 64 }))
+        .map(([b, name]) => ({ ...b, type: 'icon', name }) as Element);
     case 'edge':
       return fc
         .tuple(base, arbRouting, arbArrowHead, arbArrowHead, fc.option(fc.string({ maxLength: EDGE_LABEL_MAX }), { nil: undefined }))
@@ -299,3 +303,9 @@ const arbEditOp: fc.Arbitrary<EditOp> = fc.oneof(
 export function arbEditSequence(maxLength = 30): fc.Arbitrary<EditOp[]> {
   return fc.array(arbEditOp, { maxLength });
 }
+
+// ---------------------------------------------------------------------------
+// Mockup design features (Req 28.1, 28.3): tokens, components, layout, nesting, v1/v2 documents.
+// Documented in ./mockup.ts. Re-exported last because mockup.ts imports arbElement/arbBoardDocument.
+// ---------------------------------------------------------------------------
+export * from './mockup';

@@ -1,22 +1,37 @@
 name: Release
 
-# Push a tag such as v0.0.1 to build the extension, create a GitHub release with
-# the .vsix attached, and (when the tokens are configured) publish to the
-# Visual Studio Marketplace and Open VSX.
+# Push a tag such as v0.1.0 (matching "version" in package.json) to release:
+#
+#   1. build    - verify (typecheck, lint, tests, manifest), package ONE .vsix, record its SHA-256.
+#   2. publish  - the same .vsix goes to the Visual Studio Marketplace and to Open VSX, in parallel.
+#                 Each job checks the SHA-256 before uploading, so both stores get identical bytes.
+#   3. release  - after both publishes succeed, create the GitHub release with that .vsix and its
+#                 checksum, and notes taken from CHANGELOG.md.
+#
+# Required repository secrets: VSCE_PAT (Visual Studio Marketplace) and OVSX_PAT (Open VSX).
+# A missing secret fails the run instead of silently skipping a store.
+#
+# Re-running failed jobs is safe: on a re-run, publishing skips a version the store already has,
+# and an existing GitHub release gets its assets replaced with the same files.
 
 on:
   push:
     tags: ['v*']
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    env:
-      VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      vsix: ${{ steps.meta.outputs.vsix }}
+      sha256: ${{ steps.hash.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,43 +41,156 @@ jobs:
       - run: npm ci
 
       - name: Check tag matches package.json version
+        id: meta
         run: |
-          PKG_VERSION="$(node -p "require('./package.json').version")"
-          if [ "v${PKG_VERSION}" != "${GITHUB_REF_NAME}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match package.json version ${PKG_VERSION}" >&2
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ "v${VERSION}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${VERSION}"
             exit 1
           fi
-
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm test
-      - run: npm run package -- --out openboard.vsix
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "vsix=openboard-${VERSION}.vsix" >> "$GITHUB_OUTPUT"
 
       - name: Extract release notes from CHANGELOG
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ steps.meta.outputs.version }}"
           awk -v v="$VERSION" '
             $0 ~ "^## \\[" v "\\]" { found=1; next }
             found && /^## \[/ { exit }
             found { print }
           ' CHANGELOG.md > release-notes.md
           if [ ! -s release-notes.md ]; then
-            echo "No CHANGELOG entry found for ${VERSION}" >&2
+            echo "::error::CHANGELOG.md has no '## [${VERSION}]' section"
             exit 1
           fi
 
-      - name: Create GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run check:manifest
+
+      - name: Package
+        run: npm run package -- --out "${{ steps.meta.outputs.vsix }}"
+
+      - name: Record SHA-256
+        id: hash
         run: |
-          gh release create "${GITHUB_REF_NAME}" openboard.vsix \
-            --title "${GITHUB_REF_NAME}" \
-            --notes-file release-notes.md
+          sha256sum "${{ steps.meta.outputs.vsix }}" > "${{ steps.meta.outputs.vsix }}.sha256"
+          cat "${{ steps.meta.outputs.vsix }}.sha256"
+          echo "sha256=$(cut -d' ' -f1 "${{ steps.meta.outputs.vsix }}.sha256")" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to Visual Studio Marketplace
-        if: ${{ env.VSCE_PAT != '' }}
-        run: npx vsce publish --packagePath openboard.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            ${{ steps.meta.outputs.vsix }}
+            ${{ steps.meta.outputs.vsix }}.sha256
+            release-notes.md
+          if-no-files-found: error
+          retention-days: 30
 
-      - name: Publish to Open VSX
-        if: ${{ env.OVSX_PAT != '' }}
-        run: npx --yes ovsx publish openboard.vsix
+  publish-vs-marketplace:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      VSIX: ${{ needs.build.outputs.vsix }}
+    steps:
+      - name: Require VSCE_PAT
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::error::The VSCE_PAT repository secret is not set"
+            exit 1
+          fi
+      # Checkout + npm ci only to run the vsce version pinned in package-lock.json; nothing is rebuilt.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release
+      - name: Verify SHA-256
+        working-directory: release
+        run: |
+          sha256sum -c "${VSIX}.sha256"
+          test "$(sha256sum "$VSIX" | cut -d' ' -f1)" = "${{ needs.build.outputs.sha256 }}"
+      - name: Publish
+        run: npx vsce publish --packagePath "release/${VSIX}" ${{ github.run_attempt > 1 && '--skip-duplicate' || '' }}
+
+  publish-open-vsx:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      VSIX: ${{ needs.build.outputs.vsix }}
+    steps:
+      - name: Require OVSX_PAT
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::error::The OVSX_PAT repository secret is not set"
+            exit 1
+          fi
+      # Checkout + npm ci only to run the ovsx version pinned in package-lock.json; nothing is rebuilt.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release
+      - name: Verify SHA-256
+        working-directory: release
+        run: |
+          sha256sum -c "${VSIX}.sha256"
+          test "$(sha256sum "$VSIX" | cut -d' ' -f1)" = "${{ needs.build.outputs.sha256 }}"
+      - name: Publish
+        run: npx ovsx publish "release/${VSIX}" ${{ github.run_attempt > 1 && '--skip-duplicate' || '' }}
+
+  github-release:
+    needs: [build, publish-vs-marketplace, publish-open-vsx]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VSIX: ${{ needs.build.outputs.vsix }}
+      SHA256: ${{ needs.build.outputs.sha256 }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release
+      - name: Verify SHA-256
+        working-directory: release
+        run: sha256sum -c "${VSIX}.sha256"
+      - name: Add checksum to the notes
+        working-directory: release
+        run: |
+          {
+            echo
+            echo "---"
+            echo
+            echo "The same \`${VSIX}\` is published to the Visual Studio Marketplace and Open VSX."
+            echo
+            echo "SHA-256: \`${SHA256}\`"
+          } >> release-notes.md
+      - name: Create GitHub release
+        working-directory: release
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$VSIX" "${VSIX}.sha256" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$GITHUB_REF_NAME" --notes-file release-notes.md --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$GITHUB_REF_NAME" "$VSIX" "${VSIX}.sha256" \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --title "$GITHUB_REF_NAME" \
+              --notes-file release-notes.md
+          fi

@@ -175,7 +175,9 @@ export class DefaultToolRegistry implements ToolRegistry {
       }
       if (model && def.boardResolution !== 'none') {
         const m = model;
-        return await m.serialQueue.run(() =>
+        // Drop ids left over from any earlier transaction so they never leak into this call.
+        m.takeLastDerivedIds();
+        const result = await m.serialQueue.run(() =>
           m.transact(name, (tx) => {
             const out = def.handler({ model: m, tx, toolName: name }, input);
             if (isThenable(out)) {
@@ -185,6 +187,21 @@ export class DefaultToolRegistry implements ToolRegistry {
             return out;
           }),
         );
+        // Derived geometry (component sync, auto layout) is computed after the handler returns,
+        // so it is attached here. The extra key is schema-safe: output schemas allow extra keys.
+        const derived = m.takeLastDerivedIds();
+        if (derived.length > 0 && !def.readOnly && isPlainObject(result)) {
+          const ids = [...derived].sort();
+          return {
+            ...result,
+            geometryChanges: {
+              count: ids.length,
+              ids: ids.slice(0, MAX_GEOMETRY_CHANGE_IDS),
+              truncated: ids.length > MAX_GEOMETRY_CHANGE_IDS,
+            },
+          };
+        }
+        return result;
       }
       const out = await def.handler({ toolName: name }, input);
       this.checkOutput(entry, out);
@@ -209,6 +226,12 @@ export class DefaultToolRegistry implements ToolRegistry {
 
 function fail(code: string, message: string): ToolErrorResult {
   return { error: { code, message } };
+}
+
+const MAX_GEOMETRY_CHANGE_IDS = 500;
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 function isThenable(v: unknown): v is PromiseLike<unknown> {

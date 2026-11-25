@@ -10,6 +10,9 @@ import { registerElementTools } from '../../core/tools/element-tools';
 import { registerExportTools, type ExportHost } from '../../core/tools/export-tools';
 import { registerImportTools } from '../../core/tools/import-tools';
 import { registerLayoutTools } from '../../core/tools/layout-tools';
+import { registerTokenTools } from '../../core/tools/token-tools';
+import { registerComponentTools } from '../../core/tools/component-tools';
+import { registerIconTools } from '../../core/tools/icon-tools';
 import { DefaultToolRegistry, type ToolRegistryOptions } from '../../core/tools/registry';
 import { HostBoardResolver, type BoardHost } from '../../core/tools/resolution';
 
@@ -32,6 +35,9 @@ export function createRegistry(options: CreateRegistryOptions): DefaultToolRegis
   registerArrangeTools(registry);
   registerConnectTools(registry);
   registerLayoutTools(registry);
+  registerTokenTools(registry);
+  registerComponentTools(registry);
+  registerIconTools(registry);
   registerImportTools(registry);
   registerExportTools(registry, options.exportHost);
   registerBoardTools(registry, options.lifecycleHost ?? new StubBoardLifecycleHost());

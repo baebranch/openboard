@@ -10,7 +10,8 @@ import {
   type Range,
 } from '../model';
 
-export type PropertyKind = 'number' | 'enum' | 'color';
+/** `corners`: four per-corner numbers (top-left, top-right, bottom-right, bottom-left), each validated like `cornerRadius`. */
+export type PropertyKind = 'number' | 'enum' | 'color' | 'corners';
 
 export interface PropertyDescriptor {
   readonly name: string;
@@ -44,6 +45,13 @@ export const PROPERTY_DESCRIPTORS: Readonly<Record<string, PropertyDescriptor>> 
     maxFromShorterSide: true,
     appliesTo: ['rectangle', 'frame', 'sticky', 'flowNode', 'image'],
   },
+  cornerRadii: {
+    name: 'cornerRadii',
+    kind: 'corners',
+    range: { min: 0, max: Infinity },
+    maxFromShorterSide: true,
+    appliesTo: ['rectangle', 'frame', 'sticky', 'flowNode', 'image'],
+  },
   fontSize: { name: 'fontSize', kind: 'number', range: FONT_SIZE_RANGE, appliesTo: TEXT_TYPES },
   baseWidth: {
     name: 'baseWidth',
@@ -55,4 +63,5 @@ export const PROPERTY_DESCRIPTORS: Readonly<Record<string, PropertyDescriptor>> 
   align: { name: 'align', kind: 'enum', values: ['left', 'center', 'right'], appliesTo: TEXT_TYPES },
   fill: { name: 'fill', kind: 'color' },
   stroke: { name: 'stroke', kind: 'color' },
+  textColor: { name: 'textColor', kind: 'color', appliesTo: TEXT_TYPES },
 };

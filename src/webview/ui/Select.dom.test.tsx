@@ -161,18 +161,23 @@ describe('Select inside the properties panel', () => {
     const onUpdate = vi.fn();
     const el = {
       id: 'a',
-      type: 'rectangle',
+      type: 'text',
       x: 0,
       y: 0,
       width: 100,
       height: 50,
       rotation: 0,
       style: { fill: '#ffffff', stroke: '#000000', strokeWidth: 2, strokeStyle: 'solid', opacity: 100, cornerRadius: 0 },
+      runs: [{ text: 'Hi' }],
+      fontFamily: 'sans-serif',
+      fontSize: 14,
+      align: 'left',
     };
     render(<PropertiesPanelView elements={[el as never]} onUpdate={onUpdate} />);
-    const style = screen.queryAllByRole('combobox')[0];
-    expect(style).toBeTruthy();
-    fireEvent.click(style!);
+    // Short enums (stroke style, alignment, wrap) are icon rows; Font weight is still a dropdown.
+    const style = screen.getByLabelText('Font weight');
+    expect((style as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(style);
     const opt = screen.getAllByRole('option').find((o) => o.getAttribute('aria-selected') === 'false')!;
     fireEvent.click(opt);
     expect(onUpdate).toHaveBeenCalledTimes(1);

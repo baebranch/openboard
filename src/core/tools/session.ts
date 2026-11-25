@@ -89,6 +89,7 @@ export class ToolSession {
     }
     try {
       model.beginScope(this.label);
+      model.takeLastDerivedIds(); // stale ids from before the session must not reach its first call
     } catch (e) {
       release();
       throw e;

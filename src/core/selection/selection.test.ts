@@ -24,6 +24,16 @@ describe('hitTest and culling', () => {
     expect(hitTest([el('a', 0, 0, 10, 10), el('b', 0, 0, 10, 10)], { x: 5, y: 5 })).toBe('b');
     expect(hitTest([el('a', 0, 0, 10, 10)], { x: 50, y: 5 })).toBeUndefined();
   });
+  it('ignores hits outside a clipping frame and falls through (Req 10.3)', () => {
+    const frame = { ...el('f', 0, 0, 100, 100), type: 'frame', clipContent: true } as unknown as Element;
+    const bg = el('bg', 0, 0, 300, 300);
+    const child = { ...el('c', 50, 50, 100, 100), parentId: 'f' } as unknown as Element;
+    const els = [bg, frame, child];
+    expect(hitTest(els, { x: 80, y: 80 })).toBe('c');
+    expect(hitTest(els, { x: 120, y: 120 })).toBe('bg');
+    const open = { ...frame, clipContent: false } as unknown as Element;
+    expect(hitTest([bg, open, child], { x: 120, y: 120 })).toBe('c');
+  });
   it('keeps elements within 256px margin', () => {
     const v = { x: 0, y: 0, zoom: 1 };
     const s = { width: 800, height: 600 };

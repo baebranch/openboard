@@ -71,6 +71,39 @@ const { items } = await ob.call("element.query", { type: "frame" });
 await ob.call("viewport", { action: "zoomToFit" });
 ```
 
+Tokens, an auto-layout stack and the derived geometry it reports:
+
+```js
+const b = ob.board();
+await b.createToken({ category: "colors", name: "brand", value: "#1971c2" });
+await b.createToken({ category: "numbers", name: "space", value: 12 });
+await b.create([
+  { id: "col", type: "frame", name: "Column", x: 0, y: 0, width: 200, height: 100,
+    layout: { direction: "vertical", gap: "token:space", padding: { top: 8, right: 8, bottom: 8, left: 8 },
+      mainAlign: "start", crossAlign: "start" },
+    sizing: { width: "fixed", height: "hug" } },
+  { id: "t", type: "text", parentId: "col", text: "Title", fontWeight: 700, textColor: "token:brand", textWrap: "wrap" },
+  { id: "i", type: "icon", parentId: "col", name: (await b.searchIcons("search")).names[0] },
+  { id: "r", type: "rectangle", parentId: "col", height: 40, cornerRadii: [8, 8, 0, 0], sizing: { width: "fill", height: "fixed" } },
+]);
+// Layout ran after the create; read the arranged geometry back (never compute it yourself).
+const { items } = await b.query({ ids: ["col", "t", "i", "r"] });
+return items.map((e) => [e.id, e.x, e.y, e.width, e.height]);
+```
+
+Components, instances, overrides and detach:
+
+```js
+const b = ob.board();
+await b.createComponent({ ids: ["col"], name: "Column" });
+const inst = await b.createInstance({ master: "col", x: 400, y: 0 });
+await b.setOverride({ id: inst.id + "::t", property: "text", value: "Other" });
+await b.resetOverride({ id: inst.id, childId: "t", property: "text" });
+await b.detachInstance(inst.id);
+await b.tokenMode("dark");
+return await b.components();
+```
+
 Several boards in one run:
 
 ```js

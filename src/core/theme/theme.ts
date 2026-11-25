@@ -288,6 +288,21 @@ export function builtinPalette(kind: ThemeKind): ThemePalette {
   return resolvePalette(kind);
 }
 
+/** Default text color for new Text_Bearing_Elements: >= 4.5:1 against the canvas in every theme kind (Req 7.9). */
+export function defaultTextColor(palette: ThemePalette): string {
+  return palette.defaultText;
+}
+
+/**
+ * Remaps a `textColor` after a theme kind change (Req 7.10). The "theme default" value
+ * (`theme:default`, or absent) maps to the new theme's default text color; an explicit color is
+ * returned unchanged.
+ */
+export function remapTextColor(textColor: string | undefined, next: ThemePalette): string {
+  if (textColor === undefined || textColor === THEME_DEFAULT_COLOR) return next.defaultText;
+  return textColor;
+}
+
 export type ColorRole = 'stroke' | 'text';
 
 /**

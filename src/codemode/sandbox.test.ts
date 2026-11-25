@@ -194,6 +194,49 @@ describe('host dispatcher', () => {
   };
   const dispatch = createDispatcher({ invoke, defaultBoard: '/default.openboard' });
 
+  it('maps token, component, instance, override, detach and icon methods to the Agent_Tools unchanged', async () => {
+    calls.length = 0;
+    const board = '/y.openboard';
+    const tok = { category: 'colors', name: 'brand', value: '#ff0000' };
+    await dispatch('tokens', [board, { category: 'colors' }]);
+    await dispatch('createToken', [board, tok]);
+    await dispatch('updateToken', [board, tok]);
+    await dispatch('renameToken', [board, { category: 'colors', name: 'brand', newName: 'b2' }]);
+    await dispatch('deleteToken', [board, { category: 'colors', name: 'b2' }]);
+    await dispatch('detachTokens', [board, { ids: ['a'] }]);
+    await dispatch('tokenMode', [board, 'dark']);
+    await dispatch('components', [board]);
+    await dispatch('createComponent', [board, { ids: ['f'], name: 'Card' }]);
+    await dispatch('removeComponent', [board, 'f']);
+    await dispatch('createInstance', [board, { master: 'f', x: 1 }]);
+    await dispatch('setOverride', [board, { id: 'i::c', property: 'text', value: 'x' }]);
+    await dispatch('resetOverride', [board, { id: 'i', property: 'text' }]);
+    await dispatch('detachInstance', [board, 'i']);
+    await dispatch('searchIcons', [board, 'arrow']);
+    expect(calls.map((c) => c.name)).toEqual([
+      'openboard.token.list',
+      'openboard.token.create',
+      'openboard.token.update',
+      'openboard.token.rename',
+      'openboard.token.delete',
+      'openboard.token.detach',
+      'openboard.token.mode',
+      'openboard.component.list',
+      'openboard.component.create',
+      'openboard.component.remove',
+      'openboard.component.instance.create',
+      'openboard.component.instance.override.set',
+      'openboard.component.instance.override.reset',
+      'openboard.component.instance.detach',
+      'openboard.icon.search',
+    ]);
+    expect(calls[1]!.input).toEqual({ board, ...tok });
+    expect(calls[6]!.input).toEqual({ board, mode: 'dark' });
+    expect(calls[13]!.input).toEqual({ board, id: 'i' });
+    expect(calls[14]!.input).toEqual({ board, keyword: 'arrow' });
+    expect(await dispatch('detachInstance', [board, 5])).toMatchObject({ ok: false, error: { code: 'invalid_input' } });
+  });
+
   it('maps the board handle methods to registry tools with the board path', async () => {
     calls.length = 0;
     const board = '/x.openboard';

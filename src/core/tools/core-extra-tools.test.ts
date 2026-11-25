@@ -25,6 +25,23 @@ describe('core extra tools', () => {
     expect((await run('openboard.schema', { tool: 'nope' })).error.code).toBe('unknown_tool');
   });
 
+  it('schema lists every Mockup_Field with value type and description', async () => {
+    const { run } = setup();
+    const r = await run('openboard.schema');
+    const names = (t: string) => r.mockupFields[t].map((f: any) => f.name);
+    expect(names('frame')).toEqual(expect.arrayContaining(['layout', 'clipContent', 'component', 'instanceOf', 'overrides', 'sizing', 'ignoreLayout']));
+    expect(names('icon')).toContain('name');
+    expect(names('text')).toContain('fontWeight');
+    expect(names('text')).not.toContain('layout');
+    for (const type of Object.keys(r.elements)) {
+      for (const f of r.mockupFields[type]) {
+        expect(f.valueType.length).toBeGreaterThan(0);
+        expect(f.description.length).toBeGreaterThan(0);
+      }
+    }
+    expect(r.documentFields.map((f: any) => f.name)).toContain('tokens');
+  });
+
   it('summary counts, bounds and viewport', async () => {
     const { run, makeRects } = setup();
     await makeRects(3);
@@ -98,10 +115,81 @@ describe('core extra tools', () => {
     expect(ins.ids).toHaveLength(2);
     expect(ins.ids.some((id: string) => ids.includes(id))).toBe(false);
     const card = await run('openboard.library.insert', { component: 'card' });
-    expect(card.ids.length).toBe(BUILTIN_COMPONENTS.find((c) => c.name === 'card')!.elements.length);
+    // The card is a Component_Master: its elements plus one instance (Req 16.6).
+    expect(card.ids.length).toBe(BUILTIN_COMPONENTS.find((c) => c.name === 'card')!.elements.length + 1);
     expect((await run('openboard.library.insert', { component: 'missing' })).error.code).toBe('not_found');
     // import tool also resolves built-ins
     expect((await run('openboard.import', { source: 'component', component: 'button' })).ids.length).toBeGreaterThan(0);
+  });
+
+  it('inserts the checkbox, toggle, avatar, and badge masters with their tokens (Req 16.11)', async () => {
+    for (const name of ['checkbox', 'toggle', 'avatar', 'badge']) {
+      const { run, model } = setup();
+      const entry = BUILTIN_COMPONENTS.find((c) => c.name === name)!;
+      expect(entry.elements[0]!.type).toBe('frame');
+      const res = await run('openboard.library.insert', { component: name });
+      expect(res.error).toBeUndefined();
+      // Master elements plus one instance (Req 16.6).
+      expect(res.ids.length).toBe(entry.elements.length + 1);
+      const colors = model.getDocument().tokens?.colors ?? {};
+      for (const key of Object.keys(entry.tokens?.colors ?? {})) expect(colors).toHaveProperty(key);
+    }
+  });
+
+  it('built-in kit masters use Auto Layout; changing instance text resizes it in one undo step (Req 16.9, 16.10)', async () => {
+    const devices = ['phone', 'tablet', 'browser'];
+    for (const c of BUILTIN_COMPONENTS.filter((b) => b.elements[0]!.type === 'frame' && !devices.includes(b.name))) {
+      expect((c.elements[0] as any).layout, c.name).toBeDefined();
+    }
+    const { run, model, history } = setup();
+    const res = await run('openboard.library.insert', { component: 'button' });
+    const instanceId = res.ids[res.ids.length - 1] as string;
+    const widthOf = (id: string) => model.getDocument().elements.find((e) => e.id === id)!.width;
+    const master = widthOf('button-root');
+    // Children sit inside the master's padding, laid out by the Layout_Pass.
+    const lbl = model.getDocument().elements.find((e) => e.id === 'button-label')!;
+    const root = model.getDocument().elements.find((e) => e.id === 'button-root')!;
+    expect(lbl.x).toBe(root.x + 16);
+    expect(widthOf(instanceId)).toBe(master);
+
+    const before = history.undoCount();
+    const set = await run('openboard.component.instance.override.set', {
+      id: instanceId,
+      childId: 'button-label',
+      property: 'text',
+      value: 'A much longer button caption',
+    });
+    expect(set.error).toBeUndefined();
+    expect(history.undoCount()).toBe(before + 1);
+    expect(widthOf(instanceId)).toBeGreaterThan(master);
+    await run('openboard.undo');
+    expect(widthOf(instanceId)).toBe(master);
+  });
+
+  it('library carries tokens: records on save, adds missing on insert, keeps existing values', async () => {
+    const { run, makeRects, model, history } = setup();
+    const ids = await makeRects(1);
+    model.transact('seed', (tx) => {
+      tx.createToken('colors', 'brand', '#ff0000');
+      tx.createToken('colors', 'unused', '#000000');
+    });
+    expect((await run('openboard.element.update', { ids, set: { fill: 'token:brand' } })).error).toBeUndefined();
+    const saved = await run('openboard.library.save', { name: 'tok', ids });
+    expect(model.getDocument().library[0]!.tokens).toEqual({ colors: { brand: '#ff0000' } });
+
+    // Existing value is kept
+    model.transact('change', (tx) => tx.updateToken('colors', 'brand', '#00ff00'));
+    await run('openboard.library.insert', { component: saved.id });
+    expect(model.getDocument().tokens!.colors!['brand']).toBe('#00ff00');
+
+    // Missing token is added, and undo reverts insertion and token together
+    model.transact('rm', (tx) => tx.deleteToken('colors', 'brand'));
+    const before = history.undoCount();
+    await run('openboard.library.insert', { component: saved.id });
+    expect(history.undoCount()).toBe(before + 1);
+    expect(model.getDocument().tokens!.colors!['brand']).toBe('#ff0000');
+    await run('openboard.undo');
+    expect(model.getDocument().tokens?.colors?.['brand']).toBeUndefined();
   });
 
   it('shares an injected selection store', () => {

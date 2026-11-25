@@ -14,7 +14,9 @@ export type WebviewToHost =
   | { type: 'render:result'; requestId: string; png: string }
   /** The webview could not produce the requested output; the host removes partial output (Req 12.10). */
   | { type: 'export:cancel'; requestId: string; reason?: string }
-  | { type: 'log'; level: 'info' | 'warn'; message: string };
+  | { type: 'log'; level: 'info' | 'warn'; message: string }
+  /** Ask for the installed font families (the font picker); answered with `fonts`. */
+  | { type: 'fonts:request' };
 
 export type HostToWebview =
   | { type: 'init'; doc: BoardDocument; settings: Settings; readOnly: boolean }
@@ -26,7 +28,9 @@ export type HostToWebview =
   | { type: 'render:request'; requestId: string; spec: RenderSpec }
   | { type: 'notice'; level: string; message: string }
   /** Palette commands that change only the view (not the document): forwarded to every open tab. */
-  | { type: 'view:command'; command: ViewCommandName };
+  | { type: 'view:command'; command: ViewCommandName }
+  /** Installed font family names, sorted and deduplicated (reply to `fonts:request`). */
+  | { type: 'fonts'; families: string[] };
 
 export type ViewCommandName = 'zoomToFit' | 'toggleGrid' | 'toggleMinimap';
 

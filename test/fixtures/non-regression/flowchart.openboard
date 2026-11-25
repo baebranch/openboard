@@ -1,0 +1,154 @@
+{
+    "schemaVersion": 1,
+    "meta": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "title": "00000000-0000-4000-8000-000000000002",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "modifiedAt": "2024-01-01T00:00:00.000Z"
+    },
+    "viewport": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+    },
+    "elements": [
+        {
+            "id": "f1",
+            "type": "flowNode",
+            "x": 0,
+            "y": 0,
+            "width": 140,
+            "height": 60,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "preset": "startEnd",
+            "runs": [
+                {
+                    "text": "Start"
+                },
+                {
+                    "text": " bold",
+                    "bold": true
+                }
+            ],
+            "fontFamily": "sans-serif",
+            "fontSize": 16,
+            "align": "left"
+        },
+        {
+            "id": "f2",
+            "type": "flowNode",
+            "x": 0,
+            "y": 140,
+            "width": 140,
+            "height": 80,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "preset": "decision",
+            "runs": [
+                {
+                    "text": "OK?"
+                },
+                {
+                    "text": " bold",
+                    "bold": true
+                }
+            ],
+            "fontFamily": "sans-serif",
+            "fontSize": 16,
+            "align": "left"
+        },
+        {
+            "id": "f3",
+            "type": "flowNode",
+            "x": 240,
+            "y": 140,
+            "width": 140,
+            "height": 60,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "preset": "process",
+            "runs": [
+                {
+                    "text": "Do it"
+                },
+                {
+                    "text": " bold",
+                    "bold": true
+                }
+            ],
+            "fontFamily": "sans-serif",
+            "fontSize": 16,
+            "align": "left"
+        },
+        {
+            "id": "e1",
+            "type": "edge",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "sourceId": "f1",
+            "targetId": "f2",
+            "routing": "straight",
+            "sourceArrow": "none",
+            "targetArrow": "arrow",
+            "label": "go"
+        },
+        {
+            "id": "e2",
+            "type": "edge",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "sourceId": "f2",
+            "targetId": "f3",
+            "routing": "orthogonal",
+            "sourceArrow": "none",
+            "targetArrow": "triangle",
+            "label": "yes"
+        }
+    ],
+    "assets": [],
+    "library": []
+}

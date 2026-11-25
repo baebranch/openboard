@@ -10,7 +10,7 @@ import { MAX_ALT_TEXT_LENGTH } from '../../core/image';
 import { dispatchOp } from '../ops';
 import { store } from '../store';
 import { onCancelCreation, setActiveTool, useUiState } from '../uiState';
-import { offsetOf, positionAt } from './caret';
+import { cleanHtml, insertSoftBreaks, offsetOf, positionAt, removeSoftBreaks, softBreakOffsets, textPadding } from './caret';
 import { beginEdit, editTargetForDoubleClick, endEdit, isTextBearing, styleForShortcut, toggleStyle, type EditSession, type TextBearing } from './editSession';
 import { editingStore, useEditing } from './editingStore';
 import {
@@ -260,13 +260,37 @@ function TextEditor({ el, session, vp }: { el: TextBearing; session: EditSession
     div.innerHTML = runsToHtml(el.runs); // escaped, whitelist-only markup
     div.focus();
     placeCaretAtEnd(div);
+    relayout();
   }, []);
+
+  const wrapOn = el.textWrap === 'wrap';
+  const pad = textPadding(el.type);
+  const composing = useRef(false);
+
+  /** With wrap on, show the Renderer's line breaks as zero-length soft <br> markers; caret offsets ignore them. */
+  const relayout = (): void => {
+    const div = ref.current;
+    const cur = elRef.current;
+    if (!div || cur.textWrap !== 'wrap') return;
+    const sel = window.getSelection();
+    const inside = !!sel && sel.rangeCount > 0 && !!sel.anchorNode && !!sel.focusNode && div.contains(sel.anchorNode) && div.contains(sel.focusNode);
+    const a = inside ? offsetOf(div, sel!.anchorNode as Node, sel!.anchorOffset) : 0;
+    const f = inside ? offsetOf(div, sel!.focusNode as Node, sel!.focusOffset) : 0;
+    removeSoftBreaks(div);
+    const text = htmlToRuns(div.innerHTML).map((r) => r.text).join('');
+    insertSoftBreaks(div, softBreakOffsets(text, { fontFamily: cur.fontFamily, fontSize: cur.fontSize, fontWeight: cur.fontWeight, width: cur.width - 2 * textPadding(cur.type) }));
+    if (inside && sel) {
+      const pa = positionAt(div, a);
+      const pf = positionAt(div, f);
+      sel.setBaseAndExtent(pa.node, pa.offset, pf.node, pf.offset);
+    }
+  };
 
   const exit = (): void => {
     if (done.current) return;
     done.current = true;
     const div = ref.current;
-    const runs = div ? htmlToRuns(div.innerHTML) : [];
+    const runs = div ? htmlToRuns(cleanHtml(div)) : [];
     const outcome = endEdit(session, elRef.current, runs);
     if (outcome.kind !== 'none') dispatchOp(outcome.op.tool, outcome.op.input);
     editingStore.stop();
@@ -287,7 +311,7 @@ function TextEditor({ el, session, vp }: { el: TextBearing; session: EditSession
     if (!div || !sel || sel.rangeCount === 0 || !div.contains(sel.anchorNode)) return;
     const a = offsetOf(div, sel.anchorNode as Node, sel.anchorOffset);
     const b = offsetOf(div, sel.focusNode as Node, sel.focusOffset);
-    const next = toggleStyle(htmlToRuns(div.innerHTML), Math.min(a, b), Math.max(a, b), key);
+    const next = toggleStyle(htmlToRuns(cleanHtml(div)), Math.min(a, b), Math.max(a, b), key);
     div.innerHTML = runsToHtml(next);
     const from = positionAt(div, Math.min(a, b));
     const to = positionAt(div, Math.max(a, b));
@@ -296,6 +320,7 @@ function TextEditor({ el, session, vp }: { el: TextBearing; session: EditSession
     r.setEnd(to.node, to.offset);
     sel.removeAllRanges();
     sel.addRange(r);
+    relayout();
   };
 
   const p = boardToScreen(vp, { x: el.x, y: el.y });
@@ -317,7 +342,20 @@ function TextEditor({ el, session, vp }: { el: TextBearing; session: EditSession
         fontSize: el.fontSize * vp.zoom,
         fontFamily: el.fontFamily,
         textAlign: el.align,
+        fontWeight: el.fontWeight,
+        // Wrap on: lines are pre-broken, so the browser must not break or reflow them (white-space: pre).
+        ...(wrapOn ? { whiteSpace: 'pre', overflowWrap: 'normal', padding: pad * vp.zoom, lineHeight: 1.2 } : {}),
         transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
+      }}
+      onInput={() => {
+        if (!composing.current) relayout();
+      }}
+      onCompositionStart={() => {
+        composing.current = true;
+      }}
+      onCompositionEnd={() => {
+        composing.current = false;
+        relayout();
       }}
       onKeyDown={onKeyDown}
       onBlur={exit}

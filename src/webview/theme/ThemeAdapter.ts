@@ -3,7 +3,7 @@
  * notifies subscribers on theme changes without reloading or touching document state
  * (Req 4.1, 4.2, 4.3, 4.6, 4.7, 4.9).
  */
-import { resolvePalette, type ThemePalette } from '../../core/theme';
+import { defaultTextColor, remapTextColor, resolvePalette, type ThemePalette } from '../../core/theme';
 import {
   DEFAULT_UI_FONT_FAMILY,
   frameScheduler,
@@ -81,6 +81,19 @@ export class ThemeAdapter {
     return this.fonts.fontFamily || DEFAULT_UI_FONT_FAMILY;
   }
 
+  /** Default text color for new Text_Bearing_Elements in the current theme (Req 7.9). */
+  getDefaultTextColor(): string {
+    return defaultTextColor(this.palette);
+  }
+
+  /**
+   * Resolves a `textColor` for the current theme: "theme default" tracks the theme, explicit colors stay
+   * unchanged (Req 7.10). Subscribers are notified on the same frame as the theme change.
+   */
+  resolveTextColor(textColor: string | undefined): string {
+    return remapTextColor(textColor, this.palette);
+  }
+
   getFonts(): ThemeFonts {
     return this.fonts;
   }
@@ -120,6 +133,11 @@ export function getThemeAdapter(): ThemeAdapter {
     shared.start();
   }
   return shared;
+}
+
+/** Default text color for new Text_Bearing_Elements (Req 7.9). */
+export function getDefaultTextColor(): string {
+  return getThemeAdapter().getDefaultTextColor();
 }
 
 /** Default font family for new text elements (Req 4.7). */

@@ -1,8 +1,9 @@
 /** Accessible export modal (Req 12.1 to 12.6, 12.8, 12.9, 12.12, 12.13). Logic lives in model.ts. */
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Select } from '../ui/Select';
-import { EXPORT_FORMATS, EXPORT_SCALES, type ExportFormat, type ExportScale } from '../../core/export/scope';
+import { EXPORT_FORMATS, EXPORT_SCALES, hasComponentMasters, type ExportFormat, type ExportScale } from '../../core/export/scope';
 import type { BoardDocument, ElementId } from '../../core/model/types';
+import { hasModeTokens } from '../../core/tokens/validate';
 import {
   applyPaddingInput,
   buildOptions,
@@ -19,7 +20,7 @@ import {
 } from './model';
 
 export interface ExportDialogProps {
-  doc: Pick<BoardDocument, 'elements'>;
+  doc: Pick<BoardDocument, 'elements'> & Partial<Pick<BoardDocument, 'tokens'>>;
   selection: readonly ElementId[];
   onClose(): void;
   /** Called with the `openboard.export` tool input when the user confirms. */
@@ -166,6 +167,28 @@ export function ExportDialog({ doc, selection, onClose, onExport }: ExportDialog
           <input type="checkbox" checked={state.matchTheme} onChange={(e) => set({ matchTheme: e.target.checked })} /> Match theme colors
         </label>
 
+        {hasModeTokens(doc.tokens) && (
+          <div className="ob-field">
+            <label htmlFor={`${titleId}-token-mode`}>Token mode</label>
+            <Select
+              id={`${titleId}-token-mode`}
+              value={state.tokenMode}
+              options={[
+                { value: 'active', label: 'Active mode' },
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+              ]}
+              onChange={(v) => set({ tokenMode: v as DialogState['tokenMode'] })}
+            />
+          </div>
+        )}
+
+        {hasComponentMasters(doc) && (
+          <label>
+            <input type="checkbox" checked={state.excludeMasters} onChange={(e) => set({ excludeMasters: e.target.checked })} /> Exclude component masters
+          </label>
+        )}
+
         {state.format === 'png' && (
           <label>
             <input type="checkbox" checked={state.embedBoard} onChange={(e) => set({ embedBoard: e.target.checked })} /> Embed board in PNG
@@ -194,7 +217,7 @@ export function ExportDialog({ doc, selection, onClose, onExport }: ExportDialog
           >
             Export…
           </button>
-          <button type="button" onClick={onClose}>
+          <button type="button" className="ob-button-secondary" onClick={onClose}>
             Cancel
           </button>
         </div>

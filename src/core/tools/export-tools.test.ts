@@ -98,6 +98,33 @@ describe('export tools', () => {
     expect(Buffer.from(r.results[0].data, 'base64').subarray(0, 5).toString()).toBe('%PDF-');
   });
 
+  it('frames scope writes ONE multi-page PDF, one page per frame, in frameIds order', async () => {
+    const { run, calls, written } = await setup();
+    const r = await run('openboard.export', { format: 'pdf', scope: 'frames', frameIds: ['f2', 'f1'], scale: 2, path: '/out/slides.pdf' });
+    expect(r.results).toHaveLength(1);
+    expect(r.results[0]).toMatchObject({ mimeType: 'application/pdf', path: '/out/slides.pdf' });
+    expect(written.map((w) => w.path)).toEqual(['/out/slides.pdf']);
+    const pdf = Buffer.from(written[0]!.bytes).toString('latin1');
+    expect(pdf.match(/\/Type \/Page\b/g)).toHaveLength(2);
+    // Each page is the frame cut to its box (100 x 100), rendered in the requested order at scale 2.
+    expect(calls.map((c) => [c.opts.format, c.opts.width, c.opts.height, c.opts.scale])).toEqual([
+      ['jpeg', 100, 100, 2],
+      ['jpeg', 100, 100, 2],
+    ]);
+    expect(calls[0]!.svg).toContain('data-id="f2"');
+    expect(calls[1]!.svg).toContain('data-id="r"');
+  });
+
+  it('frames scope defaults to the slide order and rejects unknown frames', async () => {
+    const { run, calls } = await setup();
+    const r = await run('openboard.export', { scope: 'frames' });
+    expect(r.results[0].mimeType).toBe('application/pdf');
+    expect(calls.map((c) => /data-id="(f\d)"/.exec(c.svg)?.[1])).toEqual(['f1', 'f2']);
+    expect((await run('openboard.export', { scope: 'frames', frameIds: ['r'] })).error.code).toBe('not_found');
+    const svgs = await run('openboard.export', { format: 'svg', scope: 'frames' });
+    expect(svgs.results.map((x: any) => x.frameId)).toEqual(['f1', 'f2']);
+  });
+
   it('reports export validation errors', async () => {
     const { run, model } = await setup();
     expect((await run('openboard.export', { padding: 300 })).error.code).toBe('invalid-padding');

@@ -6,6 +6,8 @@
 import { getFlowNodePreset } from '../flow/presets';
 import { routeEdgeElement, type EdgeRoute } from '../flow/routing';
 import { pressureWidth } from '../freehand';
+import { ICON_PATHS, PLACEHOLDER_ICON_PATH, isKnownIcon } from '../icons';
+import { fitImage } from '../image/fit';
 import { center } from '../model/geometry';
 import type {
   ArrowHead,
@@ -21,7 +23,12 @@ import type {
   TextAlign,
   TextRun,
 } from '../model/types';
-import { builtinPalette, parseColor, resolveElementColor, type ThemePalette } from '../theme';
+import { measure } from '../text/measure';
+import { resolveMode, resolveTokens, resolveTokenValue } from '../tokens/resolve';
+import type { ResolvedTokens, TokenMode } from '../tokens/types';
+import { isTokenReference } from '../tokens/validate';
+import { builtinPalette, contrastRatio, parseColor, pickContrastColor, resolveElementColor, type ThemePalette } from '../theme';
+import { backdropCandidates } from './backdrop';
 import { contentBounds, selectScope, type ExportBackground, type ExportError, type ExportResult, type ExportScope } from './scope';
 
 export interface RenderSvgOptions {
@@ -33,6 +40,10 @@ export interface RenderSvgOptions {
   matchTheme?: boolean;
   /** Palette used when matchTheme is on. Defaults to the built-in dark palette. */
   palette?: ThemePalette;
+  /** Token mode for the export (Req 12.5): `light`, `dark`, or `active` (the board's mode). Default `active`. */
+  tokenMode?: 'light' | 'dark' | 'active';
+  /** Output region in board coordinates; content outside it is cut off. Default: the content bounds. */
+  crop?: Bounds;
 }
 
 export interface SvgOutput {
@@ -64,16 +75,86 @@ interface Ctx {
   palette: ThemePalette;
   assets: Map<string, Asset>;
   byId: Map<string, Element>;
+  /** Elements in stacking order (bottom first), for finding what sits behind text. */
+  order: readonly Element[];
+  /** Collected <clipPath> definitions for clipping Frames, keyed by frame id (insertion order). */
+  clipDefs: Map<string, string>;
+  /** Resolved design tokens; absent when the document has none. */
+  tokens?: ResolvedTokens;
 }
 
-function colorOf(value: string, ctx: Ctx, role: 'stroke' | 'text' = 'stroke'): string {
+const DEFAULT_FONT_FAMILY = 'sans-serif';
+
+/** Resolves a Token_Reference to its literal; a missing token yields undefined (the field default applies). */
+function resolveToken(value: string, category: 'colors' | 'fonts', ctx: Ctx): string | undefined {
+  if (!isTokenReference(value)) return value;
+  return ctx.tokens ? resolveTokenValue(ctx.tokens, category, value) : undefined;
+}
+
+function fontOf(value: string, ctx: Ctx | undefined): string {
+  if (!ctx || !isTokenReference(value)) return value;
+  return resolveToken(value, 'fonts', ctx) ?? DEFAULT_FONT_FAMILY;
+}
+
+function colorOf(raw: string, ctx: Ctx, role: 'stroke' | 'text' = 'stroke'): string {
+  const value = resolveToken(raw, 'colors', ctx) ?? 'theme:default';
   const c = resolveElementColor(value, ctx.palette, role);
   return parseColor(c) ? c : ctx.palette.defaultStroke;
 }
 
 function fillOf(el: Element, ctx: Ctx): string {
-  if (el.style.fill === 'theme:default') return el.type === 'sticky' ? '#fff59d' : 'none';
-  return colorOf(el.style.fill, ctx);
+  const fill = resolveToken(el.style.fill, 'colors', ctx) ?? 'theme:default';
+  if (fill === 'theme:default') return el.type === 'sticky' ? '#fff59d' : 'none';
+  return colorOf(fill, ctx);
+}
+
+/** Opaque fill an element paints, or undefined when it paints none (or a translucent / unparseable one). */
+function opaqueFillOf(el: Element, ctx: Ctx): string | undefined {
+  if (el.type === 'text' || el.type === 'image' || el.type === 'edge') return undefined;
+  const f = fillOf(el, ctx);
+  if (f === 'none') return undefined;
+  const parsed = parseColor(f);
+  return parsed && parsed.a >= 1 ? f : undefined;
+}
+
+/**
+ * The opaque color directly behind `el`'s text: its own fill (when `includeSelf`), else the topmost
+ * filled shape or Frame beneath the text, else undefined (the text sits on the canvas).
+ */
+function backdropOf(el: Element, ctx: Ctx, includeSelf: boolean): string | undefined {
+  if (includeSelf) {
+    const own = opaqueFillOf(el, ctx);
+    if (own !== undefined) return own;
+  }
+  for (const c of backdropCandidates(el, ctx.order, ctx.byId)) {
+    const fill = opaqueFillOf(c, ctx);
+    if (fill !== undefined) return fill;
+  }
+  return undefined;
+}
+
+/**
+ * Below this ratio an explicit text color directly on the canvas counts as unreadable (WCAG's
+ * minimum for large text), and is replaced by black or white for the current canvas.
+ */
+const CANVAS_TEXT_MIN_RATIO = 3;
+
+/**
+ * Text color that is legible on what actually sits behind the text.
+ * - The theme default is checked against the backdrop (own fill, a filled shape or Frame beneath,
+ *   or the canvas) and flips to black or white when it would not reach 4.5:1.
+ * - An explicit color on a filled backdrop is used as authored (that pairing is a design choice).
+ * - An explicit color directly on the canvas follows the canvas: the canvas changes with the theme
+ *   (light or dark), so a color below 3:1 against it is replaced by black or white.
+ */
+function textColorOf(el: Element, raw: string, ctx: Ctx, includeSelf: boolean): string {
+  const value = resolveToken(raw, 'colors', ctx) ?? 'theme:default';
+  const color = colorOf(raw, ctx, 'text');
+  const backdrop = backdropOf(el, ctx, includeSelf);
+  if (value === 'theme:default') return pickContrastColor(backdrop ?? ctx.palette.background, [color]);
+  if (backdrop !== undefined) return color;
+  const ratio = contrastRatio(color, ctx.palette.background);
+  return Number.isNaN(ratio) || ratio >= CANVAS_TEXT_MIN_RATIO ? color : pickContrastColor(ctx.palette.background, [ctx.palette.defaultText]);
 }
 
 function dashOf(el: Element): string {
@@ -112,14 +193,65 @@ function textLines(runs: readonly TextRun[]): TextRun[][] {
   return lines;
 }
 
+/** Re-slice one explicit-newline paragraph of runs at the measurer's break offsets, preserving run styling. */
+function wrapParagraph(
+  para: readonly TextRun[],
+  t: { fontFamily: string; fontSize: number; fontWeight?: number },
+  width: number,
+): TextRun[][] {
+  const chars: { ch: string; run: TextRun }[] = [];
+  for (const run of para) for (const ch of Array.from(run.text)) chars.push({ ch, run });
+  const text = chars.map((c) => c.ch).join('');
+  const out = measure({ text, fontFamily: t.fontFamily, fontSize: t.fontSize, fontWeight: t.fontWeight, availableWidth: width });
+  if (!out.ok) return [[...para]];
+  const lines: TextRun[][] = [];
+  let p = 0;
+  for (const line of out.value.lines) {
+    const pieces: { ch: string; run: TextRun }[] = [];
+    for (const lc of Array.from(line)) {
+      while (p < chars.length && /\s/.test(chars[p]!.ch) && lc !== ' ') p++;
+      if (p >= chars.length) break;
+      const src = chars[p]!;
+      pieces.push({ ch: lc, run: src.run });
+      if (lc === ' ') {
+        while (p < chars.length && /\s/.test(chars[p]!.ch)) p++;
+      } else p++;
+    }
+    const runs: TextRun[] = [];
+    let last: TextRun | undefined;
+    for (const pc of pieces) {
+      if (last === pc.run) runs[runs.length - 1]!.text += pc.ch;
+      else {
+        runs.push({ ...pc.run, text: pc.ch });
+        last = pc.run;
+      }
+    }
+    lines.push(runs);
+  }
+  return lines.length ? lines : [[]];
+}
+
 function renderText(
   box: Bounds,
-  t: { runs: TextRun[]; fontFamily: string; fontSize: number; align: TextAlign },
+  t: {
+    runs: TextRun[];
+    fontFamily: string;
+    fontSize: number;
+    align: TextAlign;
+    fontWeight?: number;
+    textWrap?: 'none' | 'wrap';
+  },
   color: string,
   vcenter: boolean,
   pad = 0,
+  ctx?: Ctx,
 ): string {
-  const lines = textLines(t.runs);
+  const fontFamily = fontOf(t.fontFamily, ctx);
+  let lines = textLines(t.runs);
+  if (t.textWrap === 'wrap') {
+    const w = box.width - 2 * pad;
+    lines = lines.flatMap((para) => wrapParagraph(para, { ...t, fontFamily }, w));
+  }
   const lh = t.fontSize * 1.2;
   const anchor = t.align === 'center' ? 'middle' : t.align === 'right' ? 'end' : 'start';
   const x = t.align === 'center' ? box.x + box.width / 2 : t.align === 'right' ? box.x + box.width - pad : box.x + pad;
@@ -130,7 +262,7 @@ function renderText(
     const spans = line
       .map((r) => {
         const a: string[] = [];
-        if (r.bold) a.push('font-weight="bold"');
+        if (r.bold) a.push(t.fontWeight === undefined ? 'font-weight="bold"' : `font-weight="${Math.max(700, t.fontWeight)}"`);
         if (r.italic) a.push('font-style="italic"');
         if (r.underline) a.push('text-decoration="underline"');
         return `<tspan${a.length ? ' ' + a.join(' ') : ''}>${escapeXml(r.text)}</tspan>`;
@@ -138,12 +270,47 @@ function renderText(
       .join('');
     return `<text x="${num(x)}" y="${num(y)}" xml:space="preserve">${spans}</text>`;
   });
-  return `<g font-family="${escapeXml(t.fontFamily)}" font-size="${num(t.fontSize)}" fill="${escapeXml(color)}" text-anchor="${anchor}">${out.join('')}</g>`;
+  return `<g font-family="${escapeXml(fontFamily)}" font-size="${num(t.fontSize)}"${t.fontWeight === undefined ? '' : ` font-weight="${t.fontWeight}"`} fill="${escapeXml(color)}" text-anchor="${anchor}">${out.join('')}</g>`;
 }
 
 function rectPath(el: Element, r: number): string {
   const rr = Math.max(0, Math.min(r, el.width / 2, el.height / 2));
   return `<rect x="${num(el.x)}" y="${num(el.y)}" width="${num(el.width)}" height="${num(el.height)}"${rr ? ` rx="${num(rr)}" ry="${num(rr)}"` : ''}`;
+}
+
+/** Closed path with per-corner radii (TL, TR, BR, BL); 0 yields a square corner. Returns an unterminated `<path` tag like rectPath. */
+export function cornerPath(el: Bounds, radii: readonly [number, number, number, number]): string {
+  const { x, y, width: w, height: h } = el;
+  let r = radii.map((v) => (Number.isFinite(v) && v > 0 ? v : 0));
+  // Scale down uniformly when adjacent radii would overlap along a side.
+  const [a, b, c, d] = r as [number, number, number, number];
+  const f = Math.min(
+    1,
+    a + b > 0 ? w / (a + b) : 1,
+    d + c > 0 ? w / (d + c) : 1,
+    a + d > 0 ? h / (a + d) : 1,
+    b + c > 0 ? h / (b + c) : 1,
+  );
+  r = r.map((v) => v * f);
+  const [tl, tr, br, bl] = r as [number, number, number, number];
+  const arc = (rad: number, ex: number, ey: number) => (rad > 0 ? ` A ${num(rad)} ${num(rad)} 0 0 1 ${num(ex)} ${num(ey)}` : '');
+  const d_ =
+    `M ${num(x + tl)} ${num(y)} L ${num(x + w - tr)} ${num(y)}` +
+    (tr > 0 ? arc(tr, x + w, y + tr) : ` L ${num(x + w)} ${num(y)}`) +
+    ` L ${num(x + w)} ${num(y + h - br)}` +
+    (br > 0 ? arc(br, x + w - br, y + h) : ` L ${num(x + w)} ${num(y + h)}`) +
+    ` L ${num(x + bl)} ${num(y + h)}` +
+    (bl > 0 ? arc(bl, x, y + h - bl) : ` L ${num(x)} ${num(y + h)}`) +
+    ` L ${num(x)} ${num(y + tl)}` +
+    (tl > 0 ? arc(tl, x + tl, y) : ` L ${num(x)} ${num(y)}`) +
+    ' Z';
+  return `<path d="${d_}"`;
+}
+
+/** Uses cornerPath when style.cornerRadii is present, otherwise the byte-stable rectPath. */
+function shapePath(el: Element, r: number): string {
+  const radii = el.style.cornerRadii;
+  return radii ? cornerPath(el, radii) : rectPath(el, r);
 }
 
 function diamondPoints(el: Bounds): string {
@@ -156,6 +323,47 @@ function diamondPoints(el: Bounds): string {
   ]
     .map(([x, y]) => `${num(x!)},${num(y!)}`)
     .join(' ');
+}
+
+/** Unterminated outline tag (no stroke/fill attrs) matching the element's exact shape, for clipping and stroke overlay. */
+function outlineTag(el: Element): string {
+  switch (el.type) {
+    case 'ellipse':
+      return `<ellipse cx="${num(el.x + el.width / 2)}" cy="${num(el.y + el.height / 2)}" rx="${num(el.width / 2)}" ry="${num(el.height / 2)}"`;
+    case 'diamond':
+      return `<polygon points="${diamondPoints(el)}"`;
+    case 'flowNode': {
+      if (el.preset === 'decision') return `<polygon points="${diamondPoints(el)}"`;
+      if (el.preset === 'inputOutput') {
+        const k = Math.min(el.width / 5, 24);
+        const { x, y, width: w, height: h } = el;
+        return `<polygon points="${num(x + k)},${num(y)} ${num(x + w)},${num(y)} ${num(x + w - k)},${num(y + h)} ${num(x)},${num(y + h)}"`;
+      }
+      return shapePath(el, el.style.cornerRadius || getFlowNodePreset(el.preset).cornerRadius);
+    }
+    default:
+      return shapePath(el, el.style.cornerRadius);
+  }
+}
+
+/**
+ * Image fill layer: the image clipped to the element outline, then the outline stroke redrawn on top.
+ * Returns '' (silent fallback to the flat fill) when there is no imageFill or the asset is missing/undecodable.
+ */
+function imageFillLayer(el: Element, ctx: Ctx): string {
+  const f = el.style.imageFill;
+  if (!f) return '';
+  const asset = ctx.assets.get(f.assetId);
+  if (!asset || !/^image\/[a-z0-9.+-]+$/i.test(asset.mime) || !(asset.width > 0) || !(asset.height > 0) || !asset.data) return '';
+  const r = fitImage(asset.width, asset.height, el, f.fit);
+  const href = `data:${asset.mime};base64,${safeBase64(asset.data)}`;
+  const id = `clip-${escapeXml(el.id)}`;
+  const outline = outlineTag(el);
+  return (
+    `<clipPath id="${id}">${outline}/></clipPath>` +
+    `<image href="${href}" x="${num(r.x)}" y="${num(r.y)}" width="${num(r.width)}" height="${num(r.height)}" preserveAspectRatio="none" clip-path="url(#${id})"/>` +
+    `${outline} fill="none"${strokeAttrs(el, ctx)}/>`
+  );
 }
 
 function renderFlowNode(el: FlowNodeElement, ctx: Ctx): string {
@@ -192,9 +400,9 @@ function renderFlowNode(el: FlowNodeElement, ctx: Ctx): string {
         `<path d="M ${num(x + 12)} ${num(y)} L ${num(x)} ${num(y)} L ${num(x)} ${num(y + h)} L ${num(x + 12)} ${num(y + h)}" fill="none"${strokeAttrs(el, ctx)}/>`;
       break;
     default:
-      shape = `${rectPath(el, el.style.cornerRadius || info.cornerRadius)} ${paint}/>`;
+      shape = `${shapePath(el, el.style.cornerRadius || info.cornerRadius)} ${paint}/>`;
   }
-  return shape + renderText(el, el, colorOf(el.style.stroke, ctx, 'text'), true, 4);
+  return shape + imageFillLayer(el, ctx) + renderText(el, el, textColorOf(el, el.textColor ?? el.style.stroke, ctx, true), true, 4, ctx);
 }
 
 function renderFreehand(el: FreehandElement, ctx: Ctx): string {
@@ -224,7 +432,7 @@ function safeBase64(s: string): string {
 function renderImage(el: ImageElement, ctx: Ctx): string {
   const asset = ctx.assets.get(el.assetId);
   if (!asset) {
-    return `${rectPath(el, 0)} fill="none" stroke="${escapeXml(ctx.palette.defaultStroke)}" stroke-dasharray="4 4"/>`;
+    return `${shapePath(el, 0)} fill="none" stroke="${escapeXml(ctx.palette.defaultStroke)}" stroke-dasharray="4 4"/>`;
   }
   const href = `data:${asset.mime};base64,${safeBase64(asset.data)}`;
   if (el.crop && el.crop.w > 0 && el.crop.h > 0) {
@@ -297,17 +505,24 @@ function renderEdge(el: EdgeElement, ctx: Ctx): string {
   return out;
 }
 
-function renderElement(el: Element, ctx: Ctx): string {
+function renderElementBase(el: Element, ctx: Ctx): string {
   switch (el.type) {
     case 'rectangle':
-      return wrap(el, `${rectPath(el, el.style.cornerRadius)} fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>`);
+      return wrap(
+        el,
+        `${shapePath(el, el.style.cornerRadius)} fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>` + imageFillLayer(el, ctx),
+      );
     case 'ellipse':
       return wrap(
         el,
-        `<ellipse cx="${num(el.x + el.width / 2)}" cy="${num(el.y + el.height / 2)}" rx="${num(el.width / 2)}" ry="${num(el.height / 2)}" fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>`,
+        `<ellipse cx="${num(el.x + el.width / 2)}" cy="${num(el.y + el.height / 2)}" rx="${num(el.width / 2)}" ry="${num(el.height / 2)}" fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>` +
+          imageFillLayer(el, ctx),
       );
     case 'diamond':
-      return wrap(el, `<polygon points="${diamondPoints(el)}" fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>`);
+      return wrap(
+        el,
+        `<polygon points="${diamondPoints(el)}" fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>` + imageFillLayer(el, ctx),
+      );
     case 'line':
     case 'arrow': {
       const pts = [
@@ -319,47 +534,129 @@ function renderElement(el: Element, ctx: Ctx): string {
     case 'freehand':
       return wrap(el, renderFreehand(el, ctx));
     case 'text':
-      return wrap(el, renderText(el, el, colorOf(el.style.stroke, ctx, 'text'), false));
+      return wrap(el, renderText(el, el, textColorOf(el, el.textColor ?? el.style.stroke, ctx, false), false, 0, ctx));
     case 'sticky':
       return wrap(
         el,
-        `${rectPath(el, el.style.cornerRadius)} fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>` +
-          renderText(el, el, colorOf(el.style.stroke, ctx, 'text'), false, 8),
+        `${shapePath(el, el.style.cornerRadius)} fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>` +
+          imageFillLayer(el, ctx) +
+          renderText(el, el, textColorOf(el, el.textColor ?? el.style.stroke, ctx, true), false, 8, ctx),
       );
     case 'image':
       return wrap(el, renderImage(el, ctx));
     case 'frame':
       return wrap(
         el,
-        `${rectPath(el, el.style.cornerRadius)} fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>` +
-          renderText(
-            { x: el.x, y: el.y - 20, width: el.width, height: 18 },
-            { runs: [{ text: el.name }], fontFamily: 'sans-serif', fontSize: 14, align: 'left' },
-            colorOf(el.style.stroke, ctx, 'text'),
-            false,
-          ),
+        `${shapePath(el, el.style.cornerRadius)} fill="${escapeXml(fillOf(el, ctx))}"${strokeAttrs(el, ctx)}/>` +
+          imageFillLayer(el, ctx) +
+          // Instances and their derived child Frames omit the name label: it repeats the master's
+          // and clutters repeated components. The name stays in the Properties_Panel.
+          (el.instanceOf !== undefined || el.id.includes('::')
+            ? ''
+            : renderText(
+                { x: el.x, y: el.y - 20, width: el.width, height: 18 },
+                { runs: [{ text: el.name }], fontFamily: 'sans-serif', fontSize: 14, align: 'left' },
+                textColorOf(el, el.style.stroke, ctx, false),
+                false,
+              )),
       );
     case 'flowNode':
       return wrap(el, renderFlowNode(el, ctx));
     case 'edge':
       return wrap(el, renderEdge(el, ctx));
+    case 'icon': {
+      // 24-unit Icon_Set path scaled to the element box; the stroke keeps its screen width.
+      const d = isKnownIcon(el.name) ? ICON_PATHS[el.name]! : PLACEHOLDER_ICON_PATH;
+      const sx = el.width / 24;
+      const sy = el.height / 24;
+      return wrap(
+        el,
+        `<path d="${escapeXml(d)}" transform="translate(${num(el.x)} ${num(el.y)}) scale(${num(sx)} ${num(sy)})" fill="none"${strokeAttrs(el, ctx)}${el.style.strokeStyle === 'dotted' ? '' : ' stroke-linecap="round"'} stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`,
+      );
+    }
   }
+}
+
+/** Nearest ancestor Frame with clipContent, or undefined. Cycle-safe. */
+function clipAncestor(el: Element, ctx: Ctx): Element | undefined {
+  const seen = new Set<string>([el.id]);
+  let pid = el.parentId;
+  while (pid !== undefined && !seen.has(pid)) {
+    seen.add(pid);
+    const p = ctx.byId.get(pid);
+    if (!p) return undefined;
+    if (p.type === 'frame' && (p.clipContent === true || masterOf(p, ctx)?.clipContent === true)) return p;
+    pid = p.parentId;
+  }
+  return undefined;
+}
+
+/** The Component_Master frame a Component_Instance links to, or undefined for any other element. */
+function masterOf(el: Element, ctx: Ctx): (Element & { type: 'frame' }) | undefined {
+  if (el.type !== 'frame' || el.instanceOf === undefined) return undefined;
+  const m = ctx.byId.get(el.instanceOf);
+  return m && m.type === 'frame' && m.component !== undefined ? m : undefined;
+}
+
+/**
+ * Shape a clipping Frame cuts to. A Component_Instance whose own style has no corner radii takes its master's
+ * (Req 24.8: a Device_Frame_Preset clips to the device screen shape); stored geometry is never changed.
+ */
+function clipShape(frame: Element, ctx: Ctx): Element {
+  const m = masterOf(frame, ctx);
+  if (!m || frame.style.cornerRadii || !m.style.cornerRadii) return frame;
+  return { ...frame, style: { ...frame.style, cornerRadius: m.style.cornerRadius, cornerRadii: m.style.cornerRadii } };
+}
+
+/**
+ * Registers the clipPath for a clipping Frame and returns its id. The definition references the frame's own
+ * nearest clipping ancestor via `clip-path`, so nested clips compose as an intersection.
+ * Verified in Chromium (the real rasterizer engine) by clip-raster.test.ts, so no per-level `<g clip-path>` is needed.
+ */
+function defineClip(frame: Element, ctx: Ctx): string {
+  const id = `clipc-${escapeXml(frame.id)}`;
+  if (ctx.clipDefs.has(frame.id)) return id;
+  ctx.clipDefs.set(frame.id, ''); // reserve first so a malformed cycle cannot recurse forever
+  const parent = clipAncestor(frame, ctx);
+  const nested = parent ? ` clip-path="url(#${defineClip(parent, ctx)})"` : '';
+  const c = center(frame);
+  const rot = frame.rotation ? ` transform="rotate(${num(frame.rotation)} ${num(c.x)} ${num(c.y)})"` : '';
+  ctx.clipDefs.set(frame.id, `<clipPath id="${id}"${nested}>${outlineTag(clipShape(frame, ctx))}${rot}/></clipPath>`);
+  return id;
+}
+
+/** Renders an element wrapped in its nearest clipping ancestor's clip-path. Edges are never clipped. */
+function renderElement(el: Element, ctx: Ctx): string {
+  const inner = renderElementBase(el, ctx);
+  if (el.type === 'edge') return inner;
+  const anc = clipAncestor(el, ctx);
+  if (!anc) return inner;
+  return `<g clip-path="url(#${defineClip(anc, ctx)})">${inner}</g>`;
 }
 
 /** Renders a single element to an SVG fragment (the live canvas can use this per element). */
 export function renderElementToSvg(
   el: Element,
-  doc: Pick<BoardDocument, 'assets' | 'elements'>,
+  doc: Pick<BoardDocument, 'assets' | 'elements' | 'tokens'> & Partial<Pick<BoardDocument, 'settings'>>,
   palette: ThemePalette = builtinPalette('light'),
 ): string {
-  return renderElement(el, makeCtx(doc, palette));
+  const ctx = makeCtx(doc, palette);
+  const out = renderElement(el, ctx);
+  return [...ctx.clipDefs.values()].join('') + out;
 }
 
-function makeCtx(doc: Pick<BoardDocument, 'assets' | 'elements'>, palette: ThemePalette): Ctx {
+function makeCtx(
+  doc: Pick<BoardDocument, 'assets' | 'elements' | 'tokens'> & Partial<Pick<BoardDocument, 'settings'>>,
+  palette: ThemePalette,
+  modeOverride?: TokenMode,
+): Ctx {
   return {
+    ...(doc.tokens ? { tokens: resolveTokens(doc.tokens, modeOverride ?? resolveMode(doc.settings?.activeMode, palette.kind)) } : {}),
     palette,
     assets: new Map(doc.assets.map((a) => [a.id, a])),
     byId: new Map(doc.elements.map((e) => [e.id, e])),
+    order: doc.elements,
+    clipDefs: new Map(),
   };
 }
 
@@ -368,13 +665,15 @@ function makeCtx(doc: Pick<BoardDocument, 'assets' | 'elements'>, palette: Theme
  * Fails with `empty-scope` when nothing is selected.
  */
 export function renderToSvg(
-  doc: Pick<BoardDocument, 'assets' | 'elements'>,
+  doc: Pick<BoardDocument, 'assets' | 'elements' | 'tokens'> & Partial<Pick<BoardDocument, 'settings'>>,
   scope: ExportScope | readonly Element[],
   options: RenderSvgOptions = {},
 ): ExportResult<SvgOutput> {
   const elements = Array.isArray(scope) ? [...(scope as readonly Element[])] : selectScope(doc, scope as ExportScope);
-  const bounds = contentBounds(elements);
-  if (!bounds) return { ok: false, error: EMPTY };
+  const content = contentBounds(elements);
+  if (!content) return { ok: false, error: EMPTY };
+  const crop = options.crop;
+  const bounds = crop && crop.width > 0 && crop.height > 0 ? crop : content;
 
   const matchTheme = options.matchTheme === true;
   const bgMode = options.background ?? 'white';
@@ -394,14 +693,21 @@ export function renderToSvg(
   const height = Math.ceil(bounds.height + 2 * pad);
 
   // Edges are resolved against the whole document so endpoints outside the scope still route.
-  const ctx = makeCtx({ assets: doc.assets, elements: doc.elements }, palette);
+  const modeOverride = options.tokenMode === 'light' || options.tokenMode === 'dark' ? options.tokenMode : undefined;
+  const ctx = makeCtx(
+    { assets: doc.assets, elements: doc.elements, tokens: doc.tokens, ...(doc.settings ? { settings: doc.settings } : {}) },
+    palette,
+    modeOverride,
+  );
   for (const e of elements) ctx.byId.set(e.id, ctx.byId.get(e.id) ?? e);
 
   const body = elements.map((e) => renderElement(e, ctx)).join('');
+  const defs = ctx.clipDefs.size ? `<defs>${[...ctx.clipDefs.values()].join('')}</defs>` : '';
   const bgRect = bg ? `<rect x="0" y="0" width="${width}" height="${height}" fill="${escapeXml(bg)}"/>` : '';
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
     bgRect +
+    defs +
     `<g transform="translate(${num(-ox)} ${num(-oy)})">${body}</g></svg>`;
   return { ok: true, value: { svg, width, height, bounds } };
 }

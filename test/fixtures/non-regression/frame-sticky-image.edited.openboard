@@ -1,0 +1,96 @@
+{
+  "assets": [
+    {
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "hash": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+      "height": 1,
+      "id": "as1",
+      "mime": "image/png",
+      "width": 1
+    }
+  ],
+  "elements": [
+    {
+      "height": 300,
+      "id": "r1",
+      "name": "Screen",
+      "preset": "custom",
+      "rotation": 0,
+      "style": {
+        "cornerRadius": 0,
+        "fill": "theme:default",
+        "opacity": 1,
+        "stroke": "theme:default",
+        "strokeStyle": "solid",
+        "strokeWidth": 2
+      },
+      "type": "frame",
+      "width": 400,
+      "x": 10,
+      "y": 0
+    },
+    {
+      "align": "left",
+      "fontFamily": "sans-serif",
+      "fontSize": 16,
+      "height": 120,
+      "id": "s1",
+      "parentId": "r1",
+      "rotation": 0,
+      "runs": [
+        {
+          "text": "Note"
+        },
+        {
+          "bold": true,
+          "text": " bold"
+        }
+      ],
+      "style": {
+        "cornerRadius": 0,
+        "fill": "theme:default",
+        "opacity": 1,
+        "stroke": "theme:default",
+        "strokeStyle": "solid",
+        "strokeWidth": 2
+      },
+      "type": "sticky",
+      "width": 120,
+      "x": 20,
+      "y": 20
+    },
+    {
+      "alt": "pixel",
+      "assetId": "as1",
+      "height": 100,
+      "id": "i1",
+      "parentId": "r1",
+      "rotation": 0,
+      "style": {
+        "cornerRadius": 0,
+        "fill": "theme:default",
+        "opacity": 1,
+        "stroke": "theme:default",
+        "strokeStyle": "solid",
+        "strokeWidth": 2
+      },
+      "type": "image",
+      "width": 100,
+      "x": 200,
+      "y": 40
+    }
+  ],
+  "library": [],
+  "meta": {
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "id": "00000000-0000-4000-8000-000000000003",
+    "modifiedAt": "2024-01-01T00:00:00.000Z",
+    "title": "00000000-0000-4000-8000-000000000003"
+  },
+  "schemaVersion": 1,
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  }
+}

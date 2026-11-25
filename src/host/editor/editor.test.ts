@@ -166,6 +166,36 @@ describe('sessions and routing', () => {
     expect(a.posted.map((m) => m.type)).toEqual(['init', 'notice']);
   });
 
+  it('opens and shows the notice above 5,000 elements that use Mockup_Fields, but not at 5,000', () => {
+    const mk = (n: number) => {
+      const doc = createEmptyDocument();
+      doc.elements = Array.from({ length: n }, (_, i) => ({ ...(rect as object), id: `e${i}`, clipContent: i % 2 === 0, parentId: i > 0 ? 'e0' : undefined }) as never);
+      return new BoardDocumentState('m', { ok: true, doc, readOnly: false });
+    };
+    const big = fakeSession('a');
+    routeMessage(deps(mk(5001)), big.s, { type: 'ready' });
+    expect(big.posted.map((m) => m.type)).toEqual(['init', 'notice']);
+    expect(big.posted.some((m) => m.type === 'notice' && m.message === NOTICE_LARGE_BOARD)).toBe(true);
+    const edge = fakeSession('b');
+    routeMessage(deps(mk(5000)), edge.s, { type: 'ready' });
+    expect(edge.posted.map((m) => m.type)).toEqual(['init']);
+  });
+
+  it('answers fonts:request with the injected font list, and an empty list without one or on failure', async () => {
+    const state = loaded();
+    const a = fakeSession('a');
+    routeMessage({ ...deps(state), listFonts: async () => ['Arial', 'Inter'] }, a.s, { type: 'fonts:request' });
+    routeMessage(deps(state), a.s, { type: 'fonts:request' });
+    routeMessage({ ...deps(state), listFonts: () => Promise.reject(new Error('io')) }, a.s, { type: 'fonts:request' });
+    await new Promise((r) => setTimeout(r, 0));
+    const replies = a.posted.filter((m) => m.type === 'fonts');
+    expect(replies).toHaveLength(3);
+    expect(replies).toContainEqual({ type: 'fonts', families: ['Arial', 'Inter'] });
+    expect(replies.filter((m) => m.type === 'fonts' && m.families.length === 0)).toHaveLength(2);
+    // The reply passes the host-to-webview schema.
+    for (const m of replies) expect(validators.validateHostToWebview(m)).toBe(true);
+  });
+
   it('shows the large-board notice above 5,000 elements', () => {
     const doc = createEmptyDocument();
     doc.elements = Array.from({ length: 5001 }, (_, i) => ({ ...(rect as object), id: `e${i}` }) as never);

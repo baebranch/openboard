@@ -21,11 +21,14 @@ vitest.config.mts
 vitest.perf.config.mts
 docs/**
 *.vsix
+diff.md
+scratch-*
 *.txt
 *.tmp
 *.cmd
 .vt.log
 !LICENSE
+!THIRD_PARTY_NOTICES.md
 !dist/mcp.js
 !dist/mcp-tools.json
 !dist/mcp-skill.json

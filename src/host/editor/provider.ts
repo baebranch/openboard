@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import { createEmptyDocument, parse } from '../../core/format/parser';
 import type { Settings } from '../../core/settings/settings';
 import { createMessageValidation } from '../../shared/messages';
+import { listInstalledFonts } from '../fonts';
 import { AtomicFileWriter, vscodeAtomicFs } from '../io/AtomicFileWriter';
 import { OwnWriteRegistry } from '../io/external-change';
 import { attachExternalChangeHandler, registerLocalContentProvider } from '../io/external-change-vscode';
@@ -185,6 +186,15 @@ export class BoardEditorProvider implements vscode.CustomEditorProvider<BoardDoc
       doc.dirty = true;
       this.changeEmitter.fire({ document: doc, label: e.label, undo: e.undo, redo: e.redo });
     });
+    if (state.loadSyncError) {
+      this.opts.logger.warn(`${uri.toString()}: ${state.loadSyncError.message}`);
+      void vscode.window.showErrorMessage(state.loadSyncError.message);
+    }
+    if (state.syncedOnLoad) {
+      // Req 15.10: the load-time Sync_Pass changed the board, so it opens modified.
+      doc.dirty = true;
+      this.changeEmitter.fire({ document: doc, label: 'Sync component instances', undo: () => undefined, redo: () => undefined });
+    }
     if (uri.scheme === 'file' && state.isValid) {
       const watcher = attachExternalChangeHandler({
         uri,
@@ -278,6 +288,7 @@ export class BoardEditorProvider implements vscode.CustomEditorProvider<BoardDoc
           logger: this.opts.logger,
           hub: document.hub,
           handlers,
+          listFonts: listInstalledFonts,
         },
         session,
         raw,

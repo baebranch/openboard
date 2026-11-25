@@ -82,7 +82,7 @@ describe('activation and agent surface', () => {
   it('registers exactly the five exposed LM tools when vscode.lm exists (registry stays at full size)', () => {
     start();
     expect([...harness.registeredTools.keys()].sort()).toEqual([...EXPOSED_TOOL_NAMES].sort());
-    expect(api.list()).toHaveLength(25);
+    expect(api.list()).toHaveLength(40);
     expect(api.list().every((n) => n.startsWith('openboard.'))).toBe(true);
   });
 

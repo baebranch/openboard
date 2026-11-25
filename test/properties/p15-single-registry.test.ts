@@ -79,7 +79,7 @@ describe('Property 15: One registry feeds all exposure paths', () => {
 
         // Names: registry list() == API list() == command-reachable names; LM tools == the five.
         const names = viaRegistry.list();
-        expect(names.length).toBe(25);
+        expect(names.length).toBe(40);
         expect(api.list()).toEqual(names);
         expect(viaCmd.list()).toEqual(names);
         expect([...tools.keys()].sort()).toEqual([...EXPOSED_TOOL_NAMES].sort());

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const N = 128;
 const px = Buffer.alloc(N * N * 4);
-const BG = [0x1f, 0x4e, 0x8c, 255];
+const BG = [0xc0, 0x1f, 0x2e, 255];
 const FG = [255, 255, 255, 255];
 
 function set(x, y, c) {

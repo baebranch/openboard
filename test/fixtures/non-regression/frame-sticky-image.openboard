@@ -1,0 +1,96 @@
+{
+    "schemaVersion": 1,
+    "meta": {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "title": "00000000-0000-4000-8000-000000000003",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "modifiedAt": "2024-01-01T00:00:00.000Z"
+    },
+    "viewport": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+    },
+    "elements": [
+        {
+            "id": "r1",
+            "type": "frame",
+            "x": 0,
+            "y": 0,
+            "width": 400,
+            "height": 300,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "name": "Screen",
+            "preset": "custom"
+        },
+        {
+            "id": "s1",
+            "type": "sticky",
+            "x": 20,
+            "y": 20,
+            "width": 120,
+            "height": 120,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "parentId": "r1",
+            "runs": [
+                {
+                    "text": "Note"
+                },
+                {
+                    "text": " bold",
+                    "bold": true
+                }
+            ],
+            "fontFamily": "sans-serif",
+            "fontSize": 16,
+            "align": "left"
+        },
+        {
+            "id": "i1",
+            "type": "image",
+            "x": 200,
+            "y": 40,
+            "width": 100,
+            "height": 100,
+            "rotation": 0,
+            "style": {
+                "fill": "theme:default",
+                "stroke": "theme:default",
+                "strokeWidth": 2,
+                "strokeStyle": "solid",
+                "opacity": 1,
+                "cornerRadius": 0
+            },
+            "parentId": "r1",
+            "assetId": "as1",
+            "alt": "pixel"
+        }
+    ],
+    "assets": [
+        {
+            "id": "as1",
+            "mime": "image/png",
+            "hash": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+            "width": 1,
+            "height": 1,
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        }
+    ],
+    "library": []
+}

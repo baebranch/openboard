@@ -92,7 +92,7 @@ export function buildSurface(registryNames: string[], options: { workspace: bool
     },
     {
       name: TOOL_CALL,
-      description: `Run one OpenBoard action. Actions: ${actions.join(', ')}. Read topic \`actions\` for each input schema.`,
+      description: 'Run one OpenBoard action; valid names are the `action` enum. Read topic `actions` of openboard_read_skill for every action and its input schema.',
       inputSchema: {
         type: 'object',
         properties: {

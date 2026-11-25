@@ -1,5 +1,5 @@
 import { s, type JsonSchema } from './builder';
-import { assetSchema, buildElementSchemas, libraryComponentSchema, viewportSchema } from './elements';
+import { assetSchema, buildElementSchemas, libraryComponentSchema, tokensSchema, viewportSchema } from './elements';
 import { ELEMENT_TYPES } from '../model/types';
 
 export const BOARD_SCHEMA_ID = 'https://openboard.dev/schemas/board.schema.json';
@@ -19,7 +19,7 @@ export function buildBoardSchema(): JsonSchema {
   for (const [type, schema] of Object.entries(elementSchemas)) defs[`Element_${type}`] = schema;
 
   const root = s.object({
-    schemaVersion: s.integer({ min: 1 }),
+    schemaVersion: s.enum([1, 2]),
     meta: s.object({
       id: s.string({ minLength: 1 }),
       title: s.opt(s.string()),
@@ -35,8 +35,10 @@ export function buildBoardSchema(): JsonSchema {
       s.object({
         grid: s.opt(s.object({ enabled: s.boolean(), spacing: s.number({ min: 1 }) })),
         minimap: s.opt(s.boolean()),
+        activeMode: s.opt(s.enum(['light', 'dark', 'auto'])),
       }),
     ),
+    tokens: s.opt(tokensSchema()),
   });
 
   return {

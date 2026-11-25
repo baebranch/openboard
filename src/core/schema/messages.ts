@@ -25,6 +25,7 @@ export function buildWebviewToHostSchema(): JsonSchema {
     msg('render:result', { requestId: s.string({ minLength: 1 }), png: s.string() }),
     msg('export:cancel', { requestId: s.string({ minLength: 1 }), reason: s.opt(s.string()) }),
     msg('log', { level: s.enum(['info', 'warn']), message: s.string() }),
+    msg('fonts:request'),
   ]);
 }
 
@@ -39,6 +40,7 @@ export function buildHostToWebviewSchema(): JsonSchema {
     msg('render:request', { requestId: s.string({ minLength: 1 }), spec: obj() }),
     msg('notice', { level: s.string(), message: s.string() }),
     msg('view:command', { command: s.enum(['zoomToFit', 'toggleGrid', 'toggleMinimap']) }),
+    msg('fonts', { families: s.array(s.string({ maxLength: 256 }), { maxItems: 5000 }) }),
   ]);
 }
 

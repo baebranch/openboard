@@ -1,11 +1,22 @@
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ACTIONS, ActionId, buildAction } from '../actions';
 import { Icon } from '../icons';
 import { dispatchOp } from '../ops';
 import { store as defaultStore, useWebviewState, type WebviewStore } from '../store';
 import { uiState as defaultUi, useUiState, type ToolId, type UiStateStore } from '../uiState';
-import { buildContextMenu, type ContextMenuItem } from './contextMenu';
+import {
+  buildComponentOp,
+  buildFrameOp,
+  isFrameMenuId,
+  buildContextMenu,
+  ComponentMenuId,
+  isComponentMenuId,
+  masterOf,
+  type ContextMenuItem,
+} from './contextMenu';
+import { goToMaster } from './goToMaster';
 import { isTextInputTarget, resolveKeyCommand } from './shortcuts';
+import { IconPicker } from './IconPicker';
 import { PALETTE_TOOLS, nextSelectionId, nextToolIndex } from './tools';
 
 interface MenuState {
@@ -15,9 +26,18 @@ interface MenuState {
   ids: string[];
 }
 
-export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: WebviewStore; ui?: UiStateStore }) {
+export function ToolPalette({
+  store = defaultStore,
+  ui = defaultUi,
+  footer,
+}: {
+  store?: WebviewStore;
+  ui?: UiStateStore;
+  /** Extra controls at the bottom of the palette, below a divider (the board sidebar buttons). */
+  footer?: ReactNode;
+}) {
   const { doc, readOnly } = useWebviewState(store);
-  const { activeTool, selection } = useUiState(ui);
+  const { activeTool, selection, iconName } = useUiState(ui);
   const { setActiveTool, setSelection } = ui;
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const clipboard = useRef<unknown>(undefined);
@@ -25,7 +45,13 @@ export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: 
   const latest = useRef({ doc, selection, readOnly });
   latest.current = { doc, selection, readOnly };
 
-  const activate = (id: ToolId): void => setActiveTool(id);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const activate = (id: ToolId): void => {
+    setActiveTool(id);
+    if (id === 'icon') setPickerOpen(true);
+  };
+  // Activating the Icon tool by any route opens the picker; leaving the tool closes it (Req 23.8).
+  useEffect(() => setPickerOpen(activeTool === 'icon'), [activeTool]);
 
   const run = (id: ActionId, ids: readonly string[]): void => {
     const { tool, input } = buildAction(id, { ids, clipboard: clipboard.current });
@@ -44,6 +70,7 @@ export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: 
       hasClipboard: clipboard.current !== undefined,
       readOnly: ro,
       elementCount: d?.elements.length ?? 0,
+      elements: d?.elements ?? [],
     });
     setMenu({ x, y, items, ids: targetIds });
   };
@@ -60,6 +87,22 @@ export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: 
       if (item.id === ActionId.Cut) run(ActionId.Cut, ids);
       return;
     }
+    if (isComponentMenuId(item.id)) {
+      const els = latest.current.doc?.elements ?? [];
+      if (item.id === ComponentMenuId.GoToMaster) {
+        const master = masterOf(els, ids[0] ?? '');
+        if (master) goToMaster(master, setSelection);
+        return;
+      }
+      const op = buildComponentOp(item.id, els, ids);
+      if (op) dispatchOp(op.tool, op.input);
+      return;
+    }
+    if (isFrameMenuId(item.id)) {
+      const op = buildFrameOp(item.id, latest.current.doc?.elements ?? [], ids);
+      if (op) dispatchOp(op.tool, op.input);
+      return;
+    }
     run(item.id, ids);
   };
 
@@ -68,7 +111,7 @@ export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: 
       const target = e.target as HTMLElement | null;
       const inTextInput = isTextInputTarget(target);
       if (target?.closest?.('[role="toolbar"]') && /^Arrow|^Home$|^End$/.test(e.key)) return; // toolbar handles itself
-      if (target?.closest?.('[role="menu"]')) return;
+      if (target?.closest?.('[role="menu"], [data-ob-icon-picker]')) return;
       const { doc: d, readOnly: ro } = latest.current;
       // Read the live selection, not the last-rendered one, so a just-cleared selection is honoured.
       const sel = ui.getState().selection;
@@ -95,6 +138,7 @@ export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: 
       switch (cmd.kind) {
         case 'tool':
           ui.setActiveTool(cmd.tool);
+          if (cmd.tool === 'icon') setPickerOpen(true);
           break;
         case 'cancel':
           setMenu(undefined);
@@ -149,7 +193,8 @@ export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: 
 
   return (
     <>
-      <div role="toolbar" aria-label="Tools" aria-orientation="vertical" className="ob-palette">
+      <div className="ob-palette">
+      <div role="toolbar" aria-label="Tools" aria-orientation="vertical" className="ob-palette-tools">
         {PALETTE_TOOLS.map((t, i) => {
           const pressed = t.id === activeTool;
           return (
@@ -173,6 +218,27 @@ export function ToolPalette({ store = defaultStore, ui = defaultUi }: { store?: 
           );
         })}
       </div>
+      {footer ? (
+        <>
+          <div className="ob-palette-divider" role="separator" aria-orientation="horizontal" />
+          {footer}
+        </>
+      ) : null}
+      </div>
+      {pickerOpen && activeTool === 'icon' ? (
+        <IconPicker
+          selected={iconName}
+          onChoose={(name) => {
+            ui.setIconName(name);
+            setPickerOpen(false);
+            btnRefs.current[PALETTE_TOOLS.findIndex((x) => x.id === 'icon')]?.focus();
+          }}
+          onClose={() => {
+            setPickerOpen(false);
+            btnRefs.current[PALETTE_TOOLS.findIndex((x) => x.id === 'icon')]?.focus();
+          }}
+        />
+      ) : null}
       {menu ? (
         <ul
           role="menu"

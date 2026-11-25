@@ -20,7 +20,11 @@
   background: var(--vscode-editorWidget-background, #252526);
   color: var(--vscode-editorWidget-foreground, #ccc);
   border: 1px solid var(--vscode-editorWidget-border, #454545);
+  border-radius: 6px;
   font-size: 12px;
+}
+.ob-image-controls fieldset input {
+  border-radius: 4px;
 }
 .ob-image-controls label {
   display: inline-flex;

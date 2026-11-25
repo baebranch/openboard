@@ -1,4 +1,6 @@
 import type { BoardDocument } from '../model/types';
+import { MAX_TOKENS_PER_CATEGORY, TOKEN_CATEGORIES } from '../tokens/types';
+import { validateTokenName, validateTokenValue } from '../tokens/validate';
 
 /** Returns a list of violated-invariant messages (empty when the document is consistent). */
 export function checkInvariants(doc: BoardDocument): string[] {
@@ -28,10 +30,39 @@ export function checkInvariants(doc: BoardDocument): string[] {
       problems.push(`Image ${el.id} references missing asset ${el.assetId}`);
     }
   }
+  for (const el of doc.elements) {
+    if (el.type === 'frame' && el.component !== undefined && el.instanceOf !== undefined) {
+      problems.push(`Frame ${el.id} is both a Component_Master and a Component_Instance`);
+    }
+  }
   const libIds = new Set<string>();
   for (const c of doc.library) {
     if (libIds.has(c.id)) problems.push(`Duplicate library component id: ${c.id}`);
     libIds.add(c.id);
+  }
+  problems.push(...checkTokenInvariants(doc));
+  return problems;
+}
+
+/** Defense in depth for the token collection: names, uniqueness, limits, and literal-only values. */
+function checkTokenInvariants(doc: BoardDocument): string[] {
+  const problems: string[] = [];
+  if (!doc.tokens) return problems;
+  for (const category of TOKEN_CATEGORIES) {
+    const bucket = doc.tokens[category] as Record<string, unknown> | undefined;
+    if (!bucket) continue;
+    const names = Object.keys(bucket);
+    if (names.length > MAX_TOKENS_PER_CATEGORY) {
+      problems.push(`Token category ${category} holds ${names.length} tokens (limit ${MAX_TOKENS_PER_CATEGORY})`);
+    }
+    const seen = new Set<string>();
+    for (const name of names) {
+      if (seen.has(name)) problems.push(`Duplicate ${category} token name: ${name}`);
+      seen.add(name);
+      if (!validateTokenName(name).ok) problems.push(`Invalid ${category} token name: ${name}`);
+      const v = validateTokenValue(category, bucket[name]);
+      if (!v.ok) problems.push(`Invalid ${category} token "${name}": ${v.message}`);
+    }
   }
   return problems;
 }

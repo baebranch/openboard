@@ -23,6 +23,14 @@ export interface BatchInput {
   operations: Array<{ tool: string; input?: unknown }>;
 }
 
+const MAX_GEOMETRY_CHANGE_IDS = 500;
+
+export interface GeometryChanges {
+  count: number;
+  ids: string[];
+  truncated: boolean;
+}
+
 export interface BatchFailure {
   index: number;
   reason: string;
@@ -30,7 +38,7 @@ export interface BatchFailure {
 }
 
 export type BatchOutput =
-  | { ok: true; results: unknown[]; exceededTimeTarget?: boolean }
+  | { ok: true; results: unknown[]; exceededTimeTarget?: boolean; geometryChanges?: GeometryChanges }
   | { ok: false; error: BatchFailure };
 
 class OpFailure extends Error {
@@ -89,6 +97,14 @@ export function createBatchTool(registry: Resolver): ToolDefinition<BatchInput, 
         ok: { type: 'boolean' },
         results: { type: 'array', items: {} },
         exceededTimeTarget: { type: 'boolean' },
+        geometryChanges: {
+          type: 'object',
+          properties: {
+            count: { type: 'integer' },
+            ids: { type: 'array', items: { type: 'string' } },
+            truncated: { type: 'boolean' },
+          },
+        },
         error: {
           type: 'object',
           properties: {
@@ -118,6 +134,7 @@ export function createBatchTool(registry: Resolver): ToolDefinition<BatchInput, 
       }
 
       const start = now();
+      model.takeLastDerivedIds(); // clear stale ids from earlier calls
       try {
         const results = await model.serialQueue.run(() =>
           model.transact(BATCH_TOOL_NAME, (tx) => {
@@ -142,7 +159,17 @@ export function createBatchTool(registry: Resolver): ToolDefinition<BatchInput, 
             return out;
           }),
         );
+        // The derived pass runs once, when the batch's single transaction commits, so the ids are
+        // reported once for the whole batch (and drained here so they cannot leak into later calls).
+        const derived = [...model.takeLastDerivedIds()].sort();
         const ok: BatchOutput = { ok: true, results };
+        if (derived.length > 0) {
+          ok.geometryChanges = {
+            count: derived.length,
+            ids: derived.slice(0, MAX_GEOMETRY_CHANGE_IDS),
+            truncated: derived.length > MAX_GEOMETRY_CHANGE_IDS,
+          };
+        }
         if (now() - start > BATCH_TIME_TARGET_MS) ok.exceededTimeTarget = true;
         return ok;
       } catch (e) {

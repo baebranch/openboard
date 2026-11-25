@@ -5,8 +5,10 @@
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "type": "integer",
-      "minimum": 1
+      "enum": [
+        1,
+        2
+      ]
     },
     "meta": {
       "type": "object",
@@ -76,6 +78,81 @@
         },
         "minimap": {
           "type": "boolean"
+        },
+        "activeMode": {
+          "enum": [
+            "light",
+            "dark",
+            "auto"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "tokens": {
+      "type": "object",
+      "properties": {
+        "colors": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "light": {
+                    "type": "string",
+                    "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+                  },
+                  "dark": {
+                    "type": "string",
+                    "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+                  }
+                },
+                "required": [
+                  "light",
+                  "dark"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "maxProperties": 500
+        },
+        "fonts": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "not": {
+              "type": "string",
+              "pattern": "^token:"
+            }
+          },
+          "maxProperties": 500
+        },
+        "numbers": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "maxProperties": 500
         }
       },
       "additionalProperties": true
@@ -132,6 +209,9 @@
         },
         {
           "$ref": "#/$defs/Element_edge"
+        },
+        {
+          "$ref": "#/$defs/Element_icon"
         }
       ]
     },
@@ -197,6 +277,74 @@
         },
         "builtin": {
           "type": "boolean"
+        },
+        "tokens": {
+          "type": "object",
+          "properties": {
+            "colors": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._-]{1,64}$"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "light": {
+                        "type": "string",
+                        "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+                      },
+                      "dark": {
+                        "type": "string",
+                        "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+                      }
+                    },
+                    "required": [
+                      "light",
+                      "dark"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "maxProperties": 500
+            },
+            "fonts": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._-]{1,64}$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "not": {
+                  "type": "string",
+                  "pattern": "^token:"
+                }
+              },
+              "maxProperties": 500
+            },
+            "numbers": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._-]{1,64}$"
+              },
+              "additionalProperties": {
+                "type": "number"
+              },
+              "maxProperties": 500
+            }
+          },
+          "additionalProperties": true
         }
       },
       "required": [
@@ -275,16 +423,73 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
+            "cornerRadii": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "imageFill": {
+              "type": "object",
+              "properties": {
+                "assetId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fit": {
+                  "enum": [
+                    "cover",
+                    "contain",
+                    "stretch"
+                  ]
+                }
+              },
+              "required": [
+                "assetId",
+                "fit"
+              ],
+              "additionalProperties": true
+            },
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -375,16 +580,64 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
+            "imageFill": {
+              "type": "object",
+              "properties": {
+                "assetId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fit": {
+                  "enum": [
+                    "cover",
+                    "contain",
+                    "stretch"
+                  ]
+                }
+              },
+              "required": [
+                "assetId",
+                "fit"
+              ],
+              "additionalProperties": true
+            },
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -475,16 +728,64 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
+            "imageFill": {
+              "type": "object",
+              "properties": {
+                "assetId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fit": {
+                  "enum": [
+                    "cover",
+                    "contain",
+                    "stretch"
+                  ]
+                }
+              },
+              "required": [
+                "assetId",
+                "fit"
+              ],
+              "additionalProperties": true
+            },
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -575,16 +876,43 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -675,16 +1003,43 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -775,16 +1130,43 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -910,16 +1292,43 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -991,6 +1400,22 @@
             "center",
             "right"
           ]
+        },
+        "fontWeight": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 900,
+          "multipleOf": 100
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+        },
+        "textWrap": {
+          "enum": [
+            "none",
+            "wrap"
+          ]
         }
       },
       "required": [
@@ -1053,16 +1478,52 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
+            "cornerRadii": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -1186,16 +1647,73 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
+            "cornerRadii": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "imageFill": {
+              "type": "object",
+              "properties": {
+                "assetId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fit": {
+                  "enum": [
+                    "cover",
+                    "contain",
+                    "stretch"
+                  ]
+                }
+              },
+              "required": [
+                "assetId",
+                "fit"
+              ],
+              "additionalProperties": true
+            },
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -1234,6 +1752,199 @@
         },
         "preset": {
           "type": "string"
+        },
+        "clipContent": {
+          "type": "boolean"
+        },
+        "layout": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "enum": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000
+                },
+                {
+                  "type": "string",
+                  "pattern": "^token:[A-Za-z0-9._-]{1,64}$"
+                }
+              ]
+            },
+            "padding": {
+              "type": "object",
+              "properties": {
+                "top": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^token:[A-Za-z0-9._-]{1,64}$"
+                    }
+                  ]
+                },
+                "right": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^token:[A-Za-z0-9._-]{1,64}$"
+                    }
+                  ]
+                },
+                "bottom": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^token:[A-Za-z0-9._-]{1,64}$"
+                    }
+                  ]
+                },
+                "left": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^token:[A-Za-z0-9._-]{1,64}$"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "top",
+                "right",
+                "bottom",
+                "left"
+              ],
+              "additionalProperties": true
+            },
+            "mainAlign": {
+              "enum": [
+                "start",
+                "center",
+                "end",
+                "spaceBetween"
+              ]
+            },
+            "crossAlign": {
+              "enum": [
+                "start",
+                "center",
+                "end"
+              ]
+            }
+          },
+          "required": [
+            "direction",
+            "gap",
+            "padding",
+            "mainAlign",
+            "crossAlign"
+          ],
+          "additionalProperties": true
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "instanceOf": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "fill": {
+                "type": "string",
+                "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+              },
+              "stroke": {
+                "type": "string",
+                "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+              },
+              "textColor": {
+                "type": "string",
+                "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+              },
+              "fontWeight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "multipleOf": 100
+              },
+              "imageFill": {
+                "type": "object",
+                "properties": {
+                  "assetId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fit": {
+                    "enum": [
+                      "cover",
+                      "contain",
+                      "stretch"
+                    ]
+                  }
+                },
+                "required": [
+                  "assetId",
+                  "fit"
+                ],
+                "additionalProperties": true
+              },
+              "icon": {
+                "type": "string"
+              },
+              "opacity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "width": {
+                "type": "number",
+                "minimum": 1
+              },
+              "height": {
+                "type": "number",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": true
+          }
         }
       },
       "required": [
@@ -1293,16 +2004,73 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
+            "cornerRadii": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "imageFill": {
+              "type": "object",
+              "properties": {
+                "assetId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fit": {
+                  "enum": [
+                    "cover",
+                    "contain",
+                    "stretch"
+                  ]
+                }
+              },
+              "required": [
+                "assetId",
+                "fit"
+              ],
+              "additionalProperties": true
+            },
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -1374,6 +2142,22 @@
             "center",
             "right"
           ]
+        },
+        "fontWeight": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 900,
+          "multipleOf": 100
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+        },
+        "textWrap": {
+          "enum": [
+            "none",
+            "wrap"
+          ]
         }
       },
       "required": [
@@ -1436,16 +2220,73 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
+            "cornerRadii": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "imageFill": {
+              "type": "object",
+              "properties": {
+                "assetId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fit": {
+                  "enum": [
+                    "cover",
+                    "contain",
+                    "stretch"
+                  ]
+                }
+              },
+              "required": [
+                "assetId",
+                "fit"
+              ],
+              "additionalProperties": true
+            },
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -1516,6 +2357,22 @@
             "left",
             "center",
             "right"
+          ]
+        },
+        "fontWeight": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 900,
+          "multipleOf": 100
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+        },
+        "textWrap": {
+          "enum": [
+            "none",
+            "wrap"
           ]
         },
         "preset": {
@@ -1591,16 +2448,43 @@
         "groupId": {
           "type": "string"
         },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
         "style": {
           "type": "object",
           "properties": {
             "fill": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "stroke": {
               "type": "string",
-              "pattern": "^(theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
             },
             "strokeWidth": {
               "type": "number",
@@ -1691,6 +2575,139 @@
       ],
       "additionalProperties": true,
       "title": "edge"
+    },
+    "Element_icon": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "icon"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -1000000,
+          "maximum": 1000000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -1000000,
+          "maximum": 1000000
+        },
+        "width": {
+          "type": "number",
+          "minimum": 1
+        },
+        "height": {
+          "type": "number",
+          "minimum": 1
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -360,
+          "maximum": 360
+        },
+        "parentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "groupId": {
+          "type": "string"
+        },
+        "sizing": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            },
+            "height": {
+              "enum": [
+                "fixed",
+                "hug",
+                "fill"
+              ]
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": true
+        },
+        "ignoreLayout": {
+          "type": "boolean"
+        },
+        "style": {
+          "type": "object",
+          "properties": {
+            "fill": {
+              "type": "string",
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+            },
+            "stroke": {
+              "type": "string",
+              "pattern": "^((theme:default|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))|token:[A-Za-z0-9._-]{1,64})$"
+            },
+            "strokeWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "strokeStyle": {
+              "enum": [
+                "solid",
+                "dashed",
+                "dotted"
+              ]
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeStyle",
+            "opacity",
+            "cornerRadius"
+          ],
+          "additionalProperties": true
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "x",
+        "y",
+        "width",
+        "height",
+        "rotation",
+        "style",
+        "name"
+      ],
+      "additionalProperties": true,
+      "title": "icon"
     }
   }
 }
