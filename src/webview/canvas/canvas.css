@@ -762,7 +762,8 @@ body.vscode-high-contrast-light .ob-components {
  * Stroke, ...), compact inputs with inline prefixes, icon rows, and a thin scrollbar.
  * Theme variables only, with built-in dark fallbacks (Req 26.5).
  * --------------------------------------------------------------------------------------------- */
-.ob-app > .ob-properties {
+.ob-app > .ob-properties,
+.ob-modal {
   padding: 0;
   font-family: var(--vscode-font-family, system-ui, -apple-system, 'Segoe UI', sans-serif);
   font-size: 12px;
@@ -928,6 +929,8 @@ body.vscode-high-contrast-light .ob-components {
 /* Inputs, selects and the affix box share one look: 28px tall, rounded, no border until focus. */
 .ob-properties input[type='text'],
 .ob-properties .ob-select-button,
+.ob-modal input[type='text'],
+.ob-modal .ob-select-button,
 .ob-input-affix {
   min-height: 28px;
   border-radius: 6px;
@@ -937,6 +940,8 @@ body.vscode-high-contrast-light .ob-components {
 }
 .ob-properties input[type='text']:hover,
 .ob-properties .ob-select-button:hover:not(:disabled),
+.ob-modal input[type='text']:hover,
+.ob-modal .ob-select-button:hover:not(:disabled),
 .ob-input-affix:hover {
   border-color: var(--ob-ui-border, #80808059);
 }
@@ -1001,7 +1006,8 @@ body.vscode-high-contrast-light .ob-components {
   font-size: 12px;
   opacity: 0.9;
 }
-.ob-properties .ob-prop-check input[type='checkbox'] {
+.ob-properties .ob-prop-check input[type='checkbox'],
+.ob-modal .ob-prop-check input[type='checkbox'] {
   align-self: center;
   margin: 0;
 }
@@ -1178,6 +1184,12 @@ body.vscode-high-contrast-light .ob-components {
 /* High contrast: every control keeps a visible border (Req 4.3). */
 body.vscode-high-contrast .ob-input-affix,
 body.vscode-high-contrast-light .ob-input-affix,
+body.vscode-high-contrast .ob-modal input[type='text'],
+body.vscode-high-contrast-light .ob-modal input[type='text'],
+body.vscode-high-contrast .ob-modal .ob-select-button,
+body.vscode-high-contrast-light .ob-modal .ob-select-button,
+body.vscode-high-contrast .ob-modal .ob-modal-close,
+body.vscode-high-contrast-light .ob-modal .ob-modal-close,
 body.vscode-high-contrast .ob-properties .ob-segmented-icons,
 body.vscode-high-contrast-light .ob-properties .ob-segmented-icons {
   border: 1px solid var(--ob-contrast-border, #6fc3df);

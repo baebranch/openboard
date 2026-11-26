@@ -5,7 +5,7 @@
  */
 import { serialize } from '../format/serializer';
 import { intersects, rotatedBounds } from '../model/geometry';
-import type { BoardDocument, Element } from '../model/types';
+import type { BoardDocument, Bounds, Element } from '../model/types';
 import {
   EXPORT_FORMATS,
   prepareExport,
@@ -69,9 +69,10 @@ async function renderOne(
   host: ExportHost,
   doc: BoardDocument,
   opts: ExportOptions,
-  prepared: { elements: Element[] },
+  prepared: { elements: Element[]; bounds?: Bounds; cropped?: boolean },
 ): Promise<Rendered> {
   const svgRes = renderToSvg(doc, prepared.elements, {
+    ...(prepared.cropped && prepared.bounds ? { crop: prepared.bounds } : {}),
     padding: opts.padding,
     background: opts.background,
     matchTheme: opts.matchTheme,

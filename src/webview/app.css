@@ -210,39 +210,114 @@ body.vscode-high-contrast-light .ob-context-menu button {
 }
 
 .ob-modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+/*
+ * Dialogs use the properties panel layout: a title bar, hairline-separated sections with small
+ * muted labels, and a footer with the actions. Inputs and selects share the panel look (canvas.css).
+ */
 .ob-modal {
   box-sizing: border-box;
-  min-width: 320px;
-  padding: 16px;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  line-height: 1.5;
+  overflow: hidden;
   border-radius: 8px;
-  background: var(--ob-bg, var(--vscode-editor-background));
-  color: var(--ob-fg, var(--vscode-foreground));
+  /* Same surface as the properties panel and toolbar. */
+  background: var(--ob-panel-bg, #252526);
+  color: var(--ob-panel-fg, #cccccc);
   border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
   box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
 }
-.ob-modal h2 { margin: 0 0 4px; font-size: 1.1em; font-weight: 600; }
 .ob-modal p { margin: 0; }
-.ob-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.ob-modal-actions button,
-.ob-properties-actions button {
-  padding: 4px 12px;
+.ob-modal-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  border-bottom: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+.ob-modal-header h2 { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.4; }
+/* Close: a toolbar-style icon button. */
+.ob-modal .ob-modal-close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--ob-toolbar-fg, var(--ob-panel-fg, #cccccc));
+  background: transparent;
+  border: var(--ob-ui-border-width, 1px) solid transparent;
+  border-radius: 4px;
+}
+.ob-modal .ob-modal-close:hover {
+  background: color-mix(in srgb, var(--ob-toolbar-fg, #cccccc) 12%, transparent);
+}
+.ob-modal .ob-modal-close:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
+.ob-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+/* The last section's hairline would double up with the footer's. */
+.ob-modal-body > .ob-prop-section:last-child { border-bottom: 0; }
+.ob-modal-footer {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+}
+.ob-modal-status {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.8;
+}
+.ob-modal-status.ob-prop-error { opacity: 1; white-space: normal; }
+.ob-modal-actions { display: flex; flex: none; gap: 6px; justify-content: flex-end; margin-left: auto; }
+/* Dialog buttons: same size, radius and padding as the properties panel buttons. */
+.ob-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-width: 72px;
+  min-height: 28px;
+  padding: 3px 12px;
+  line-height: 1.4;
+  white-space: nowrap;
   border-radius: 4px;
   cursor: pointer;
 }
+/* Primary action keeps the accent colors; secondary matches the panel buttons. */
+.ob-modal-actions button:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground, #1177bb);
+}
 .ob-modal-actions button:disabled { opacity: 0.5; cursor: default; }
-.ob-modal-actions { margin-top: 6px; }
-.ob-modal-actions button { min-width: 80px; min-height: 28px; }
 .ob-modal-actions button.ob-button-secondary {
   color: var(--vscode-button-secondaryForeground, var(--ob-panel-fg, #cccccc));
   background: var(--vscode-button-secondaryBackground, #3a3d41);
 }
-.ob-modal .ob-field > label { opacity: 0.85; }
-.ob-modal > label { display: flex; align-items: center; gap: 6px; }
-.ob-modal > label input[type='checkbox'] { margin: 0; }
+.ob-modal-actions button.ob-button-secondary:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+.ob-modal-actions button:focus-visible {
+  outline: 1px solid var(--ob-focus, #007fd4);
+  outline-offset: 1px;
+}
 .ob-export { display: flex; gap: 8px; }
 
 /* Labelled fields: label above the control (properties panel, export dialog). */
@@ -328,13 +403,20 @@ body.vscode-high-contrast-light .ob-context-menu button {
   padding: 8px;
   color: var(--ob-panel-fg, #cccccc);
   background: var(--ob-toolbar-bg, #252526);
-  border: 1px solid var(--ob-border, #454545);
-  border-radius: 4px;
+  border: var(--ob-ui-border-width, 1px) solid var(--ob-ui-border, #80808059);
+  border-radius: 8px;
+  box-shadow: var(--ob-shadow, 0 2px 8px rgba(0, 0, 0, 0.36));
 }
 .ob-icon-picker input {
   width: 100%;
   box-sizing: border-box;
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border-color: transparent;
 }
+.ob-icon-picker input:hover { border-color: var(--ob-ui-border, #80808059); }
+.ob-icon-picker input:focus { outline: 1px solid var(--ob-focus, #007fd4); outline-offset: -1px; border-color: var(--ob-focus, #007fd4); }
 .ob-icon-picker-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);

@@ -1,7 +1,7 @@
 {
   "name": "openboard",
   "displayName": "%openboard.displayName%",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "publisher": "baebranch",
   "description": "%openboard.description%",
