@@ -176,7 +176,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide.
 
 ### Publishing
 
-Pushing a `v<version>` tag (matching `version` in `package.json`) runs the **Release** workflow (`.github/workflows/release.yml`). It verifies and packages the extension once, publishes that same `.vsix` to the Visual Studio Marketplace and Open VSX (checking its SHA-256 before each upload), and then creates a GitHub release with the `.vsix`, its `.sha256` checksum and notes from `CHANGELOG.md`. It needs the `VSCE_PAT` and `OVSX_PAT` repository secrets and fails if either is missing.
+Every push to `main` runs the **Release** workflow (`.github/workflows/release.yml`). When the `version` in `package.json` has no `v<version>` tag yet, it verifies and packages the extension once, publishes that same `.vsix` to the Visual Studio Marketplace and Open VSX (checking its SHA-256 before each upload), and then creates the tag and a GitHub release with the `.vsix`, its `.sha256` checksum and notes from `CHANGELOG.md`. Pushes that keep an already released version publish nothing. It needs the `VSCE_PAT` and `OVSX_PAT` repository secrets and fails if either is missing.
 
 To publish by hand, use the VS Code tasks `openboard: publish to VS Code Marketplace` and `openboard: publish to Open VSX`, or:
 

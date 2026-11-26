@@ -1,12 +1,16 @@
 name: Release
 
-# Push a tag such as v0.1.0 (matching "version" in package.json) to release:
+# Every push to main checks whether the version in package.json has been released yet (that is,
+# whether a v<version> tag exists). If it has, nothing else runs. If not:
 #
 #   1. build    - verify (typecheck, lint, tests, manifest), package ONE .vsix, record its SHA-256.
 #   2. publish  - the same .vsix goes to the Visual Studio Marketplace and to Open VSX, in parallel.
 #                 Each job checks the SHA-256 before uploading, so both stores get identical bytes.
-#   3. release  - after both publishes succeed, create the GitHub release with that .vsix and its
-#                 checksum, and notes taken from CHANGELOG.md.
+#   3. release  - after both publishes succeed, create the v<version> tag on the pushed commit and
+#                 the GitHub release with that .vsix, its checksum, and notes from CHANGELOG.md.
+#
+# So releasing means: bump "version" in package.json, add its CHANGELOG.md section, push to main.
+# Pushes that do not change the version (already tagged) release nothing.
 #
 # Required repository secrets: VSCE_PAT (Visual Studio Marketplace) and OVSX_PAT (Open VSX).
 # A missing secret fails the run instead of silently skipping a store.
@@ -16,20 +20,46 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# One release at a time; a newer push waits instead of cancelling a release in progress.
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.meta.outputs.version }}
+      release: ${{ steps.check.outputs.release }}
+      version: ${{ steps.check.outputs.version }}
+      tag: ${{ steps.check.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Is this version released yet?
+        id: check
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" > /dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::${TAG} already exists; nothing to release. Bump the version in package.json to release."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Releasing ${TAG}"
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    outputs:
       vsix: ${{ steps.meta.outputs.vsix }}
       sha256: ${{ steps.hash.outputs.sha256 }}
     steps:
@@ -40,20 +70,13 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Check tag matches package.json version
+      - name: Package name
         id: meta
-        run: |
-          VERSION="$(node -p "require('./package.json').version")"
-          if [ "v${VERSION}" != "${GITHUB_REF_NAME}" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${VERSION}"
-            exit 1
-          fi
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "vsix=openboard-${VERSION}.vsix" >> "$GITHUB_OUTPUT"
+        run: echo "vsix=openboard-${{ needs.check.outputs.version }}.vsix" >> "$GITHUB_OUTPUT"
 
       - name: Extract release notes from CHANGELOG
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          VERSION="${{ needs.check.outputs.version }}"
           awk -v v="$VERSION" '
             $0 ~ "^## \\[" v "\\]" { found=1; next }
             found && /^## \[/ { exit }
@@ -154,12 +177,13 @@ jobs:
         run: npx ovsx publish "release/${VSIX}" ${{ github.run_attempt > 1 && '--skip-duplicate' || '' }}
 
   github-release:
-    needs: [build, publish-vs-marketplace, publish-open-vsx]
+    needs: [check, build, publish-vs-marketplace, publish-open-vsx]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.check.outputs.tag }}
       VSIX: ${{ needs.build.outputs.vsix }}
       SHA256: ${{ needs.build.outputs.sha256 }}
     steps:
@@ -181,16 +205,17 @@ jobs:
             echo
             echo "SHA-256: \`${SHA256}\`"
           } >> release-notes.md
-      - name: Create GitHub release
+      # Creating the release also creates the tag on the commit that was built.
+      - name: Create GitHub release and tag
         working-directory: release
         run: |
-          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$VSIX" "${VSIX}.sha256" --clobber --repo "$GITHUB_REPOSITORY"
-            gh release edit "$GITHUB_REF_NAME" --notes-file release-notes.md --repo "$GITHUB_REPOSITORY"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$VSIX" "${VSIX}.sha256" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --notes-file release-notes.md --repo "$GITHUB_REPOSITORY"
           else
-            gh release create "$GITHUB_REF_NAME" "$VSIX" "${VSIX}.sha256" \
+            gh release create "$TAG" "$VSIX" "${VSIX}.sha256" \
               --repo "$GITHUB_REPOSITORY" \
-              --verify-tag \
-              --title "$GITHUB_REF_NAME" \
+              --target "$GITHUB_SHA" \
+              --title "$TAG" \
               --notes-file release-notes.md
           fi

@@ -36,8 +36,8 @@ Open an issue with the OpenBoard and VS Code versions, your OS, steps to reprodu
 
 1. Move the **Unreleased** entries in `CHANGELOG.md` under a new version heading with the date, and update the compare links at the bottom.
 2. Bump `version` in `package.json` (`npm version <patch|minor|major> --no-git-tag-version`).
-3. Commit, then tag and push: `git tag vX.Y.Z && git push origin main vX.Y.Z`.
-4. The **Release** workflow verifies and packages one `.vsix`, publishes that exact file to the Visual Studio Marketplace and Open VSX (the SHA-256 is checked before each upload), then creates the GitHub release with the `.vsix`, its checksum and notes taken from the changelog. The `VSCE_PAT` and `OVSX_PAT` repository secrets are required. If a job fails, use **Re-run failed jobs**: a store that already has the version is skipped and the release assets are replaced with the same files.
+3. Commit and push to `main`. Do not create the tag yourself: the workflow releases only versions that have no `vX.Y.Z` tag yet, and creates the tag when it succeeds.
+4. The **Release** workflow verifies and packages one `.vsix`, publishes that exact file to the Visual Studio Marketplace and Open VSX (the SHA-256 is checked before each upload), then creates the `vX.Y.Z` tag and the GitHub release with the `.vsix`, its checksum and notes taken from the changelog. The `VSCE_PAT` and `OVSX_PAT` repository secrets are required. If a job fails, use **Re-run failed jobs**: a store that already has the version is skipped and the release assets are replaced with the same files.
 
 ## License
 

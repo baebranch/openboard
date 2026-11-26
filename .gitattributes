@@ -1,0 +1,19 @@
+# Check out text files with LF on every platform. Tests compare serializer output, generated
+# manifests and skill markdown byte for byte, and Windows runners default to core.autocrlf=true,
+# which would otherwise turn them into CRLF on checkout.
+* text=auto eol=lf
+
+# Binary files: never convert or diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.wasm binary
+*.vsix binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
