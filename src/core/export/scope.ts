@@ -182,8 +182,11 @@ export function checkLimits(
   elements: readonly Element[],
   padding: number,
   scale: number,
+  /** Output region overriding the content bounds (a Frame's own box). */
+  region?: Bounds,
 ): ExportResult<{ w: number; h: number; bounds: Bounds }> {
-  const bounds = contentBounds(elements);
+  const content = contentBounds(elements);
+  const bounds = content && region && region.width > 0 && region.height > 0 ? region : content;
   if (!bounds) return { ok: false, error: { code: 'empty-scope', message: EMPTY_SCOPE_MESSAGE } };
   const size = computeOutputSize(bounds, padding, scale);
   if (size.w > EXPORT_MAX_PIXELS || size.h > EXPORT_MAX_PIXELS) {
@@ -219,12 +222,16 @@ export function isRaster(format: ExportFormat): boolean {
 export function prepareExport(
   doc: Pick<BoardDocument, 'elements'>,
   opts: ExportOptions,
-): ExportResult<{ elements: Element[]; bounds: Bounds; w: number; h: number }> {
+): ExportResult<{ elements: Element[]; bounds: Bounds; w: number; h: number; cropped?: boolean }> {
   const err = validateOptions(opts);
   if (err) return { ok: false, error: err };
   const elements = selectScope(opts.excludeMasters ? omitComponentMasters(doc) : doc, opts.scope);
   const scale = isRaster(opts.format) ? opts.scale : 1;
-  const r = checkLimits(elements, opts.padding, scale);
+  // A Frame exports cut to its own box, so content hanging past its edge adds no blank space.
+  const scope = opts.scope;
+  const frame = scope.kind === 'frame' ? elements.find((e) => e.id === scope.id && e.type === 'frame') : undefined;
+  const region = frame ? { x: frame.x, y: frame.y, width: frame.width, height: frame.height } : undefined;
+  const r = checkLimits(elements, opts.padding, scale, region);
   if (!r.ok) return r;
-  return { ok: true, value: { elements, ...r.value } };
+  return { ok: true, value: { elements, ...r.value, ...(region ? { cropped: true } : {}) } };
 }

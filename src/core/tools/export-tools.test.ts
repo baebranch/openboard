@@ -76,6 +76,16 @@ describe('export tools', () => {
     expect(new TextDecoder().decode(written[0]!.bytes)).toContain('<svg');
   });
 
+  it('frame and allFrames scopes are cut to the frame box, ignoring overflow', async () => {
+    const { run } = await setup();
+    // Hangs 60 below f1's bottom edge (like a screenshot cropped by the frame).
+    await run('openboard.element.create', { elements: [{ type: 'rectangle', id: 'tall', x: 50, y: 50, width: 20, height: 110 }] });
+    const one = await run('openboard.export', { format: 'svg', scope: 'frame', frameId: 'f1' });
+    expect(one.results[0]).toMatchObject({ width: 100, height: 100 });
+    const all = await run('openboard.export', { format: 'svg', scope: 'allFrames' });
+    expect(all.results.find((x: { frameId: string }) => x.frameId === 'f1')).toMatchObject({ width: 100, height: 100 });
+  });
+
   it('allFrames yields one result and file per frame', async () => {
     const { run, written } = await setup();
     const r = await run('openboard.export', { format: 'svg', scope: 'allFrames', path: '/out/frames.svg' });

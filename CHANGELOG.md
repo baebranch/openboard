@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-26
+
+### Changed
+
+- The Export dialog uses the properties panel design: a title bar with a close button, **Area** and **Output** sections with compact labels and inputs, and a footer with the size preview, **Cancel** and **Export…** (now with an icon). Dialog buttons match the panel buttons, including hover and focus states.
+- The icon picker popup uses the same border, corner radius, shadow and input style as the other panels.
+
+### Fixed
+
+- Exporting a frame from the Export dialog ("A single frame" or "All frames") is cut to the frame's own box. Content that hangs past the frame's edge, such as a cropped screenshot, no longer adds blank space to the image. The same applies to `openboard.export` with `scope: "frame"` or `"allFrames"`.
+- The Export dialog's frame list shows frame names instead of ids.
+- High contrast themes keep visible borders on the Export dialog's inputs, dropdowns and close button.
+
 ## [0.1.0] - 2026-11-25
 
 ### Added
@@ -73,6 +86,7 @@ Two results are over budget in some runs and only pass because of the 3x toleran
 - Exported `{ list, describe, invoke }` API and the `openboard.invokeTool` command.
 - JSON Schema validation for `*.openboard` files.
 
-[Unreleased]: https://github.com/openboard-dev/openboard/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/openboard-dev/openboard/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/openboard-dev/openboard/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/openboard-dev/openboard/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/openboard-dev/openboard/releases/tag/v0.0.1

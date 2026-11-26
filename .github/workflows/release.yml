@@ -1,16 +1,20 @@
-name: Release
+name: CI and Release
 
-# Every push to main checks whether the version in package.json has been released yet (that is,
-# whether a v<version> tag exists). If it has, nothing else runs. If not:
+# One workflow for verification and releases, so nothing is published unless every check passes.
 #
-#   1. build    - verify (typecheck, lint, tests, manifest), package ONE .vsix, record its SHA-256.
-#   2. publish  - the same .vsix goes to the Visual Studio Marketplace and to Open VSX, in parallel.
-#                 Each job checks the SHA-256 before uploading, so both stores get identical bytes.
-#   3. release  - after both publishes succeed, create the v<version> tag on the pushed commit and
-#                 the GitHub release with that .vsix, its checksum, and notes from CHANGELOG.md.
+#   verify            - on Linux AND Windows: typecheck, lint, the full test suite, the manifest
+#                       check, and a test package build. Runs for every push to main and every pull
+#                       request.
+#   check             - is the version in package.json released yet (does a v<version> tag exist)?
+#   package           - only on main, only for an unreleased version, only after verify passed on
+#                       both platforms: build ONE .vsix and record its SHA-256.
+#   publish-*         - the same .vsix goes to the Visual Studio Marketplace and to Open VSX, in
+#                       parallel. Each job checks the SHA-256 before uploading.
+#   github-release    - after both publishes succeed: create the v<version> tag on the built commit
+#                       and the GitHub release with that .vsix, its checksum, and CHANGELOG.md notes.
 #
-# So releasing means: bump "version" in package.json, add its CHANGELOG.md section, push to main.
-# Pushes that do not change the version (already tagged) release nothing.
+# Releasing: bump "version" in package.json, add its CHANGELOG.md section, push to main. Pushes
+# that keep an already released (tagged) version only verify.
 #
 # Required repository secrets: VSCE_PAT (Visual Studio Marketplace) and OVSX_PAT (Open VSX).
 # A missing secret fails the run instead of silently skipping a store.
@@ -21,18 +25,42 @@ name: Release
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# One release at a time; a newer push waits instead of cancelling a release in progress.
+# Pull requests: a newer push cancels the older run. main: one run at a time, never cancelled,
+# so a release in progress always finishes.
 concurrency:
-  group: release
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  verify:
+    name: verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run check:manifest
+      - name: Package (test build)
+        run: npm run package -- --out openboard.vsix
+
   check:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.check.outputs.release }}
@@ -52,11 +80,11 @@ jobs:
             echo "::notice::${TAG} already exists; nothing to release. Bump the version in package.json to release."
           else
             echo "release=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::Releasing ${TAG}"
+            echo "::notice::${TAG} will be released if verification passes"
           fi
 
-  build:
-    needs: check
+  package:
+    needs: [verify, check]
     if: needs.check.outputs.release == 'true'
     runs-on: ubuntu-latest
     outputs:
@@ -87,11 +115,7 @@ jobs:
             exit 1
           fi
 
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm test
-      - run: npm run check:manifest
-
+      # The verify jobs already ran the checks on this commit; this only builds the release package.
       - name: Package
         run: npm run package -- --out "${{ steps.meta.outputs.vsix }}"
 
@@ -113,11 +137,11 @@ jobs:
           retention-days: 30
 
   publish-vs-marketplace:
-    needs: build
+    needs: package
     runs-on: ubuntu-latest
     env:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      VSIX: ${{ needs.build.outputs.vsix }}
+      VSIX: ${{ needs.package.outputs.vsix }}
     steps:
       - name: Require VSCE_PAT
         run: |
@@ -140,16 +164,16 @@ jobs:
         working-directory: release
         run: |
           sha256sum -c "${VSIX}.sha256"
-          test "$(sha256sum "$VSIX" | cut -d' ' -f1)" = "${{ needs.build.outputs.sha256 }}"
+          test "$(sha256sum "$VSIX" | cut -d' ' -f1)" = "${{ needs.package.outputs.sha256 }}"
       - name: Publish
         run: npx vsce publish --packagePath "release/${VSIX}" ${{ github.run_attempt > 1 && '--skip-duplicate' || '' }}
 
   publish-open-vsx:
-    needs: build
+    needs: package
     runs-on: ubuntu-latest
     env:
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      VSIX: ${{ needs.build.outputs.vsix }}
+      VSIX: ${{ needs.package.outputs.vsix }}
     steps:
       - name: Require OVSX_PAT
         run: |
@@ -172,20 +196,20 @@ jobs:
         working-directory: release
         run: |
           sha256sum -c "${VSIX}.sha256"
-          test "$(sha256sum "$VSIX" | cut -d' ' -f1)" = "${{ needs.build.outputs.sha256 }}"
+          test "$(sha256sum "$VSIX" | cut -d' ' -f1)" = "${{ needs.package.outputs.sha256 }}"
       - name: Publish
         run: npx ovsx publish "release/${VSIX}" ${{ github.run_attempt > 1 && '--skip-duplicate' || '' }}
 
   github-release:
-    needs: [check, build, publish-vs-marketplace, publish-open-vsx]
+    needs: [check, package, publish-vs-marketplace, publish-open-vsx]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ needs.check.outputs.tag }}
-      VSIX: ${{ needs.build.outputs.vsix }}
-      SHA256: ${{ needs.build.outputs.sha256 }}
+      VSIX: ${{ needs.package.outputs.vsix }}
+      SHA256: ${{ needs.package.outputs.sha256 }}
     steps:
       - uses: actions/download-artifact@v4
         with:
